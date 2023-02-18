@@ -41,16 +41,6 @@ type Position struct {
 	UPNL             float64
 }
 
-// A Candle represents the OHCLV data of a market
-type Candle struct {
-	Close     float64   `json:"close"`
-	High      float64   `json:"high"`
-	Low       float64   `json:"low"`
-	Open      float64   `json:"open"`
-	Volume    float64   `json:"volume"`
-	StartTime time.Time `json:"startTime"`
-}
-
 type Orderbook struct {
 	Ticker    string       // Symbol name
 	Bid       [][2]float64 // Bid Price, Bid Size
@@ -77,4 +67,18 @@ type FundingPayment struct {
 	Rate      float64
 	Fee       float64
 	Timestamp time.Time
+}
+
+// A Candle represents the OHCLV data of a market
+type Candle struct {
+	Close     float64   `json:"close"`
+	High      float64   `json:"high"`
+	Low       float64   `json:"low"`
+	Open      float64   `json:"open"`
+	Volume    float64   `json:"volume"`
+	StartTime time.Time `json:"startTime"`
+}
+
+func (c Candle) OHCL4() float64 {
+	return (c.Open + c.Close + c.High + c.Low) / 4
 }
