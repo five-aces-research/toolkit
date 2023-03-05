@@ -51,3 +51,10 @@ type Privat interface {
 	//FundingHistory No Ticker or nil equal all Coins
 	FundingHistory(ticker []string, start, end time.Time) ([]FundingPayment, error)
 }
+
+type Streamer interface {
+	Kline(ticker string, resolution int64, start time.Time, end time.Time) ([]Candle, error)
+
+	LiveKline(ticker string, resolution int64, parameters ...any) (chan WsCandle, error)
+	Ping() error
+}

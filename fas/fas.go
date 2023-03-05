@@ -82,3 +82,39 @@ type Candle struct {
 func (c Candle) OHCL4() float64 {
 	return (c.Open + c.Close + c.High + c.Low) / 4
 }
+
+type WsCandle struct {
+	Close     float64   `json:"close"`
+	High      float64   `json:"high"`
+	Low       float64   `json:"low"`
+	Open      float64   `json:"open"`
+	Volume    float64   `json:"volume"`
+	StartTime time.Time `json:"startTime"`
+	End       time.Time
+	Ticker    string
+	Finished  bool
+}
+
+func (c WsCandle) ToCandle() Candle {
+	return Candle{
+		Close:     c.Close,
+		High:      c.High,
+		Low:       c.Low,
+		Open:      c.Open,
+		Volume:    c.Volume,
+		StartTime: c.StartTime,
+	}
+}
+
+/*
+func (c *Client) Request(request types.RequestStruct) (*types.ResponseStruct, error) {
+	var resp models.CancelOrderResponse
+	err := c.POST("/v5/order/cancel", request, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+*/
