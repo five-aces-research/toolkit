@@ -24,7 +24,7 @@ type Order struct {
 	Size         float64 // Size in coin value
 	NotionalSize float64 // Size in USD if avaible
 	Price        float64 // Price
-	ReduceOnly   float64
+	ReduceOnly   bool
 	State        OrderState // Orderstate
 	Conditional  bool       // true if its conditional order
 }
@@ -33,12 +33,13 @@ type Position struct {
 	Id               string // If is Int64 gets converted to string
 	Side             bool
 	Ticker           string
-	EntryPrice       float64 // Price is AvgPrice
+	AvgPrice         float64 // Price is AvgPrice
 	Size             float64 // Size in coin value
 	NotionalSize     float64 // Size in USD if avaible
 	LiquidationPrice float64 // If Avaible
 	PNL              float64
 	UPNL             float64
+	Created          time.Time
 }
 
 type Orderbook struct {

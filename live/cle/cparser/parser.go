@@ -14,13 +14,13 @@ import (
 type Communicator interface {
 	io.Writer
 	io.Reader
-	AddVariable(string, Variable)         //Add an Variable
-	GetVariable(string) (Variable, error) //Return a Variable
+	AddVariable(string, Variable)          //Add an Variable
+	GetVariable(string) (*Variable, error) //Return a Variable
 	ErrorMessage(s error)
 }
 
 type Parser interface {
-	Evaluate(w Communicator, f cle.CLEIO)
+	Evaluate(f cle.CLEIO, w Communicator) error
 }
 
 // Parse returns a Parser which then gets Evaluated and returns
@@ -46,16 +46,17 @@ func Parse(tk []clexer.Token, c Communicator) (Parser, error) {
 	case clexer.SIDE: // buy, sell
 		o, err = ParseOrder(tk[0].Value, tk[1:])
 	case clexer.STOP: //stop
-		//o, err = ParseStop(nk[1:])
+		//o, err = ParseStop(tk[1:])
 	case clexer.CANCEL: //cancel
-		//o, err = ParseCancel(nk[1:])
-	case clexer.CLOSE: //fclose
-		//o, err = ParseClose(nk[1:])
+		o, err = ParseCancel(tk[1:])
+	case clexer.CLOSE:
+		o, err = ParseClose(tk[1:])
 	case clexer.VARIABLE:
 	case clexer.FUNDINGPAYS:
+
 	case clexer.FUNDINGRATES:
 	default:
-		return o, nerr(empty, fmt.Sprintf("Invalid Type Error during Parsing %v", nk[0].Type))
+		return o, nerr(empty, fmt.Sprintf("Invalid Type Error during Parsing %v", tk[0].Type))
 	}
 
 	if err != nil {

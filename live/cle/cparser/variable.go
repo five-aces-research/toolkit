@@ -31,22 +31,24 @@ func parseVariables(tk []clexer.Token, c Communicator) ([]clexer.Token, error) {
 
 		}
 	}
+	ntk = tk
+	return ntk, nil
 }
 
-func parseVariable(v Variable, tk []clexer.Token) (new []clexer.Token, rest []clexer.Token, error) {
+func parseVariable(v Variable, tk []clexer.Token) (new []clexer.Token, rest []clexer.Token, err error) {
 	switch v.Type {
 	case FUNCTION:
 		nk, err := parseFunc(v.Content, tk)
 		if err != nil {
-			return tk, err
+			return tk, tk, err
 		}
-		return nk, nil
+		return nk, tk, nil
 	case CONSTANT:
-		nk, ok := v.Content.([]lexer.Token)
+		nk, ok := v.Content.([]clexer.Token)
 		if !ok {
-			return tk, nerr(empty, "Error Parse Variable, Variable not existing")
+			return tk, tk, nerr(empty, "Error Parse Variable, Variable not existing")
 		}
-		return append(nk, tk...), nil
+		return append(nk, tk...), tk, nil
 	}
 
 	return tk, nil, nerr(empty, "Error while Parsing a Variable Something went wrong")
@@ -57,7 +59,6 @@ func parseFunc(v interface{}, tk []clexer.Token) ([]clexer.Token, error) {
 	if !ok {
 		return tk, nerr(empty, fmt.Sprintf("Unexpected ERROR with %v ", fun))
 	}
-	e, err := fun.Parse(tk)
+	e, _, err := fun.Parse(tk)
 	return e, err
-
 }
