@@ -10,8 +10,8 @@ func TestSetOrder(t *testing.T) {
 	pr := NewPrivate("ke", "kE5jRrPgSPSuOJikF6", "JsVyekm5hgVl9SPSwxbTTx9nW7XqwAmBEVKT", true)
 
 	res, err := pr.by.GetPositionInfo(models.GetPositionInfoRequest{
-		Category: "inverse",
-		Symbol:   "null",
+		Category: "linear",
+		Symbol:   "BTCUSDT",
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -19,7 +19,7 @@ func TestSetOrder(t *testing.T) {
 	}
 
 	for _, v := range res.List {
-		fmt.Printf("%+v\n", v)
+		fmt.Println(v.Size, v.PositionValue)
 	}
 
 }

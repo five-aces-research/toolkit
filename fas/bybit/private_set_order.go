@@ -16,8 +16,13 @@ func (p *Private) SetOrder(side bool, Ticker string, price float64, sizeInUsd fl
 		Side = "Buy"
 	}
 	OrderType := "Limit"
+	var err error
 	if marketOrder {
 		OrderType = "Market"
+		price, err = p.GetMarketPrice(Ticker)
+		if err != nil {
+			return fas.Order{}, err
+		}
 	}
 	tickerInfo, err := p.GetTickerInfo(Ticker)
 	if err != nil {

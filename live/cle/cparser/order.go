@@ -58,7 +58,6 @@ func ParseOrder(Side string, tk []clexer.Token) (o *Order, err error) {
 }
 
 func (o *Order) Evaluate(f cle.CLEIO, w Communicator) error {
-	fmt.Println(o.A)
 	size, err := o.A.GetAmount(f)
 	if err != nil {
 		return err

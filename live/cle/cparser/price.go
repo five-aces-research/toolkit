@@ -182,8 +182,8 @@ func (p *Price) Execute(f cle.CLEIO, w Communicator, side bool, ticker string, s
 func (p *Price) ExecuteTrades(side bool, ticker string, vv [3]float64, size float64, f cle.CLEIO, w Communicator) error {
 	if p.IsLaddered[0] {
 		prices := GetPricesLadderedOrder(p.IsLaddered[1], vv[0], vv[1], vv[2])
-		for _, v := range prices {
-			v[1] = size * v[1]
+		for i, v := range prices {
+			prices[i][1] = size * v[1]
 		}
 
 		or, err := f.BlockOrder(side, ticker, false, prices, p.ReduceOnly)
@@ -191,7 +191,11 @@ func (p *Price) ExecuteTrades(side bool, ticker string, vv [3]float64, size floa
 			return err
 		}
 		for _, v := range or {
-			w.Write([]byte(fmt.Sprintf("Placed Order: %s %s %f %f", v.Side, v.Ticker, v.Size, v.Price)))
+			Side := "Sell"
+			if v.Side {
+				Side = "Buy"
+			}
+			w.Write([]byte(fmt.Sprintf("Placed Order: %s %s %f %f", Side, v.Ticker, v.Size, v.Price)))
 		}
 		return nil
 	}
@@ -199,7 +203,12 @@ func (p *Price) ExecuteTrades(side bool, ticker string, vv [3]float64, size floa
 	if err != nil {
 		return err
 	}
-	w.Write([]byte(fmt.Sprintf("Placed Order: %s %s %f %f", v.Side, v.Ticker, v.Size, v.Price)))
+	Side := "Sell"
+	if v.Side {
+		Side = "Buy"
+	}
+
+	w.Write([]byte(fmt.Sprintf("Placed Order: %s %s %f %f", Side, v.Ticker, v.Size, v.Price)))
 	return nil
 }
 
@@ -208,7 +217,6 @@ func (p *Price) EvaluateDiff(mp float64, side bool) [3]float64 {
 	if side {
 		factor = 1.0
 	}
-	fmt.Println(mp, p.Values[1])
 
 	return [3]float64{p.Values[0], mp - p.Values[1]*factor, mp - p.Values[2]*factor}
 }

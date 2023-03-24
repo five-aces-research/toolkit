@@ -31,13 +31,22 @@ func NewPrivate(name string, public string, private string, test bool) *Private 
 	var np Private
 	np.by = bb
 	np.tickerInfo = make(map[string]fas.TickerInfo)
+	np.cache = Cache{data: make(map[string]CacheEntry)}
 	return &np
 }
 
 func (p *Private) BlockOrder(side bool, Ticker string, trigger bool, priceSize [][2]float64, reduceOnly bool) ([]fas.Order, error) {
-	cat, ticker := categoryTicker(Ticker)
-	fmt.Println(cat, ticker)
-	panic("implement me")
+	var out []fas.Order
+
+	for _, v := range priceSize {
+		o, err := p.SetOrder(side, Ticker, v[0], v[1], false, true, false)
+		if err != nil {
+			log.Println(err)
+		} else {
+			out = append(out, o)
+		}
+	}
+	return out, nil
 }
 
 func (p *Private) OpenOrders(side bool, Ticker string) ([]fas.Order, error) {
@@ -79,7 +88,6 @@ func (p *Private) SetTriggerOrder(side bool, ticker string, price float64, size 
 
 func (p *Private) Cancel(Side int, Ticker string) error {
 	cat, ticker := categoryTicker(Ticker)
-	fmt.Println(cat, ticker)
 
 	res, err := p.by.GetOpenOrders(models.GetOpenOrdersRequest{
 		Category:    cat,
@@ -131,7 +139,6 @@ func (p *Private) Cancel(Side int, Ticker string) error {
 
 func (p *Private) CancelTrigger(Side int, ticker string) error {
 	cat, ticker := categoryTicker(ticker)
-	fmt.Println(cat, ticker)
 
 	res, err := p.by.GetOpenOrders(models.GetOpenOrdersRequest{
 		Category:    cat,
@@ -244,10 +251,10 @@ func (p *Private) Position(Ticker string) (*fas.Position, error) {
 		return nil, nil
 	}
 	pos := res.List[0]
-	if cat == "invers" {
-		return toFasPosition(pos.Side, Ticker, pos.Size, pos.AvgPrice, pos.UnrealisedPnl, pos.LiqPrice, pos.CreatedTime), nil
+	if cat != "invers" {
+		return toFasPosition(pos.Side, Ticker, pos.Size, pos.PositionValue, pos.AvgPrice, pos.UnrealisedPnl, pos.LiqPrice, pos.CreatedTime), nil
 	} else {
-		return toFasPosition(pos.Side, Ticker, pos.PositionValue, pos.AvgPrice, pos.UnrealisedPnl, pos.LiqPrice, pos.CreatedTime), nil
+		return toFasPosition(pos.Side, Ticker, pos.PositionValue, pos.Size, pos.AvgPrice, pos.UnrealisedPnl, pos.LiqPrice, pos.CreatedTime), nil
 	}
 
 }
@@ -256,13 +263,14 @@ func (p *Private) FundingHistory(ticker []string, start, end time.Time) ([]fas.F
 	return nil, errors.New("not implemented")
 }
 
-func toFasPosition(Side string, Ticker string, size, avgPrice, pnl, liqPrice string, created string) *fas.Position {
+func toFasPosition(Side string, Ticker string, size, notionalSize, avgPrice, pnl, liqPrice string, created string) *fas.Position {
 	var side bool
 	if Side == "Buy" {
 		side = true
 	}
 
 	Size, _ := strconv.ParseFloat(size, 64)
+	NotionalSize, _ := strconv.ParseFloat(notionalSize, 64)
 	AvgPrice, _ := strconv.ParseFloat(avgPrice, 64)
 	Pnl, _ := strconv.ParseFloat(pnl, 64)
 	LiqPrice, _ := strconv.ParseFloat(liqPrice, 64)
@@ -273,8 +281,8 @@ func toFasPosition(Side string, Ticker string, size, avgPrice, pnl, liqPrice str
 		Ticker:           Ticker,
 		AvgPrice:         AvgPrice,
 		Size:             Size,
-		NotionalSize:     LiqPrice,
-		LiquidationPrice: Size,
+		NotionalSize:     NotionalSize,
+		LiquidationPrice: LiqPrice,
 		UPNL:             Pnl,
 		Created:          time.Unix(Created/1000, 0),
 	}

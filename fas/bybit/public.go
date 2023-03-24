@@ -14,6 +14,7 @@ import (
 type Public struct {
 	by         *bybit.Client
 	tickerInfo map[string]fas.TickerInfo
+	cache      Cache
 }
 
 func NewPublic() *Public {
@@ -21,7 +22,7 @@ func NewPublic() *Public {
 	if err != nil {
 		log.Println(err)
 	}
-	return &Public{by: cl, tickerInfo: make(map[string]fas.TickerInfo)}
+	return &Public{by: cl, tickerInfo: make(map[string]fas.TickerInfo), cache: Cache{data: make(map[string]CacheEntry)}}
 }
 
 func (b *Public) Kline(ticker string, resolution int64, start time.Time, endTime time.Time) ([]fas.Candle, error) {
@@ -77,10 +78,13 @@ func (b *Public) GetMarketPrice(ticker string) (float64, error) {
 	}
 	switch cat {
 	case "linear", "inverse":
-		res, err := b.by.GetTickersLinear(req)
+		var res models.GetTickersLinearResponse
+		err := b.Check(2, &res, b.by.GetTickersLinear, req)
+		//res, err := b.by.GetTickersLinear(req)
 		if err != nil {
 			return 0, err
 		}
+		fmt.Println(res)
 		l := res.List[0]
 		return median(l.Ask1Price, l.Bid1Price, l.LastPrice), nil
 	case "spot":

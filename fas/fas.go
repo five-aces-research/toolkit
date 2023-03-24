@@ -85,26 +85,14 @@ func (c Candle) OHCL4() float64 {
 }
 
 type WsCandle struct {
-	Close     float64   `json:"close"`
-	High      float64   `json:"high"`
-	Low       float64   `json:"low"`
-	Open      float64   `json:"open"`
-	Volume    float64   `json:"volume"`
-	StartTime time.Time `json:"startTime"`
-	End       time.Time
-	Ticker    string
-	Finished  bool
+	Data     Candle
+	End      time.Time
+	Ticker   string
+	Finished bool
 }
 
 func (c WsCandle) ToCandle() Candle {
-	return Candle{
-		Close:     c.Close,
-		High:      c.High,
-		Low:       c.Low,
-		Open:      c.Open,
-		Volume:    c.Volume,
-		StartTime: c.StartTime,
-	}
+	return c.Data
 }
 
 /*

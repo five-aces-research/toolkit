@@ -42,11 +42,17 @@ func (c *Close) Evaluate(f cle.CLEIO, w Communicator) error {
 	}
 
 	if pz.Side == c.Side {
-		v, err := f.SetOrder(!c.Side, c.Ticker, 0, pz.NotionalSize, true, false, true)
+
+		v, err := f.SetOrder(!c.Side, c.Ticker, 0, pz.NotionalSize*1.5, true, false, true)
 		if err != nil {
 			return err
 		}
-		w.Write([]byte(fmt.Sprintf("Placed Order: %s %s %f %f", v.Side, v.Ticker, v.Size, v.Price)))
+		side := "Sell"
+		if v.Side {
+			side = "Buy"
+		}
+
+		w.Write([]byte(fmt.Sprintf("Closed Order: %s %s %f %f", side, v.Ticker, v.Size, v.Price)))
 	}
 	return nil
 }

@@ -15,6 +15,7 @@ func Source(o Chart, op func(candle fas.Candle) float64, name string) Series {
 	for _, c := range o.Data() {
 		d = append(d, op(c))
 	}
+
 	s.data = d
 	return s
 }
