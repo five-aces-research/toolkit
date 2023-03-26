@@ -54,7 +54,6 @@ type Privat interface {
 
 type Streamer interface {
 	Kline(ticker string, resolution int64, start time.Time, end time.Time) ([]Candle, error)
-
 	LiveKline(ticker string, resolution int64, parameters ...any) (chan WsCandle, error)
 	Ping() error
 }
