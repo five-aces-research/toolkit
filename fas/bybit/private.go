@@ -39,7 +39,7 @@ func (p *Private) BlockOrder(side bool, Ticker string, trigger bool, priceSize [
 	var out []fas.Order
 
 	for _, v := range priceSize {
-		o, err := p.SetOrder(side, Ticker, v[0], v[1], false, true, false)
+		o, err := p.SetOrder(side, Ticker, v[0], v[1], false, true, reduceOnly)
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -106,17 +106,11 @@ func (p *Private) Cancel(Side int, Ticker string) error {
 		condition = func(string) bool { return true }
 	case -1:
 		condition = func(ss string) bool {
-			if ss == "Sell" {
-				return true
-			}
-			return false
+			return ss == "Sell"
 		}
 	case 1:
 		condition = func(ss string) bool {
-			if ss == "Buy" {
-				return true
-			}
-			return false
+			return ss == "Buy"
 		}
 	}
 
@@ -220,7 +214,7 @@ func (p *Private) Collateral(Ticker string) (total float64, free float64, err er
 
 	res, err := p.by.GetWalletBalance(models.GetWalletBalanceRequest{
 		AccountType: "UNIFIED",
-		Coin:        "BTC",
+		Coin:        "BTC", // BTC is choose, so that Bybit API is not giving us a list of all coins.
 	})
 	if err != nil {
 		return 0, 0, err

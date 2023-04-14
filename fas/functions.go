@@ -1,6 +1,11 @@
 package fas
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+	"strconv"
+	"strings"
+)
 
 /*
 GenerateResolutionFunc returns a function
@@ -90,4 +95,20 @@ func CheckForHoles(ch []Candle, res int64) {
 		c = v
 	}
 	fmt.Println("\nFinished")
+}
+
+// RoundValue is used to Round Price and Amount. Exchanges often don't accept
+// Inputs like Size 30.0000004, this function rounds to 30.0 if ticksize is 0.5
+func RoundValue(price float64, tickSize float64) float64 {
+	rounded := math.Round(price/tickSize) * tickSize
+	precision := decimalPlaces(tickSize)
+	formatted := fmt.Sprintf("%.*f", precision, rounded)
+	f, _ := strconv.ParseFloat(strings.TrimRight(strings.TrimRight(formatted, "0"), "."), 64)
+	return f
+}
+
+func decimalPlaces(value float64) int {
+	str := fmt.Sprintf("%f", value)
+	decimals := len(str) - 1 - strings.Index(str, ".")
+	return decimals
 }

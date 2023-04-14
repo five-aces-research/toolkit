@@ -14,7 +14,7 @@ const (
 )
 
 const LONG = true
-const FALSE = false
+const SHORT = false
 
 type Order struct {
 	Id     string // If is Int64 gets converted to string

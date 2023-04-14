@@ -128,15 +128,16 @@ func (b *Public) GetOrderbook(ticker string, limit int) (fas.Orderbook, error) {
 
 func (b *Public) GetTickerInfo(Ticker string) (fas.TickerInfo, error) {
 	cat, ticker := categoryTicker(Ticker)
+	ti, ok := b.tickerInfo[strings.ToUpper(Ticker)]
+	if ok {
+		return ti, nil
+	}
+
 	req := models.GetInstrumentsInfoRequest{
 		Category: cat,
 		Symbol:   ticker,
 	}
 
-	ti, ok := b.tickerInfo[strings.ToUpper(Ticker)]
-	if ok {
-		return ti, nil
-	}
 	switch cat {
 	case "linear", "inverse":
 		res, err := b.by.GetInstrumentsInfoLinear(req)
