@@ -2,24 +2,21 @@ package bybit
 
 import (
 	"fmt"
-	"github.com/DawnKosmos/bybit-go5/models"
 	"testing"
+	"time"
 )
 
-func TestSetOrder(t *testing.T) {
-	pr := NewPrivate("ke", "kE5jRrPgSPSuOJikF6", "JsVyekm5hgVl9SPSwxbTTx9nW7XqwAmBEVKT", true)
+func TestHistoricalOrders(t *testing.T) {
+	pr := NewPrivate("RoRo", "k1ofNVyJkAnoXtwj1l", "", false)
 
-	res, err := pr.by.GetPositionInfo(models.GetPositionInfoRequest{
-		Category: "linear",
-		Symbol:   "BTCUSDT",
-	})
+	res, err := pr.GetOrderHistory(nil, time.Unix(0, 0), time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
 
-	for _, v := range res.List {
-		fmt.Println(v.Size, v.PositionValue)
+	for _, v := range res {
+		fmt.Printf("%+v\n", v)
 	}
 
 }

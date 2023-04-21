@@ -7,7 +7,9 @@ import (
 	"github.com/DawnKosmos/bybit-go5/models"
 	"github.com/five-aces-research/toolkit/fas"
 	"log"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -81,8 +83,7 @@ func (p *Private) OpenOrders(side bool, Ticker string) ([]fas.Order, error) {
 
 func (p *Private) SetTriggerOrder(side bool, ticker string, price float64, size float64, orderType string, reduceOnly bool) (fas.Order, error) {
 	cat, ticker := categoryTicker(ticker)
-	fmt.Println(cat, ticker)
-
+	fmt.Println(cat)
 	panic("implement me")
 }
 
@@ -257,6 +258,98 @@ func (p *Private) FundingHistory(ticker []string, start, end time.Time) ([]fas.F
 	return nil, errors.New("not implemented")
 }
 
+func (p *Private) GetOrderHistory(ticker []string, start, end time.Time) ([]fas.Order, error) {
+	var or []fas.Order
+
+	if ticker == nil || len(ticker) == 0 {
+		res, err := p.getOrderHistory("spot", "", start, end)
+		if err != nil {
+			return or, err
+		}
+		or = append(or, res...)
+		res, err = p.getOrderHistory("inverse", "", start, end)
+		if err != nil {
+			return or, err
+		}
+		or = append(or, res...)
+		res, err = p.getOrderHistory("linear", "", start, end)
+		if err != nil {
+			return or, err
+		}
+		or = append(or, res...)
+	} else {
+		for _, v := range ticker {
+			cat, tt := categoryTicker(v)
+			res, err := p.getOrderHistory(cat, tt, start, end)
+			if err != nil {
+				return or, err
+			}
+			or = append(or, res...)
+		}
+	}
+	sort.Sort(Orders(or))
+	return or, nil
+}
+
+func (p *Private) getOrderHistory(category string, ticker string, start, end time.Time) ([]fas.Order, error) {
+	var cursor string
+	var or []fas.Order
+
+	res, err := p.by.GetOrderHistory(models.GetOrderHistoryRequest{
+		Category: category,
+		Symbol:   ticker,
+		Limit:    50,
+	})
+	if err != nil {
+		return nil, err
+	}
+	cursor = res.NextPageCursor
+
+	or = toFasOrderFromHistoryOrder(category, res)
+	for cursor != "" {
+		res, err := p.by.GetOrderHistory(models.GetOrderHistoryRequest{
+			Category: category,
+			Symbol:   ticker,
+			Limit:    50,
+			Cursor:   cursor,
+		})
+		if err != nil {
+			return nil, err
+		}
+		cursor = res.NextPageCursor
+
+		or = append(or, toFasOrderFromHistoryOrder(category, res)...)
+	}
+
+	return or, nil
+}
+
+func toFasOrderFromHistoryOrder(category string, request *models.GetOrderHistoryResponse) []fas.Order {
+	or := make([]fas.Order, 0, len(request.List))
+	catIdentifier := category[:1] + "."
+
+	for _, v := range request.List {
+		Side := v.Side == "buy"
+		Size, _ := strconv.ParseFloat(v.Qty, 64)
+		Price, _ := strconv.ParseFloat(v.Price, 64)
+		CreateTime, _ := strconv.ParseInt(v.CreatedTime, 10, 64)
+
+		or = append(or, fas.Order{ //TODO maybe adder trigger price
+			Id:           v.OrderId,
+			Side:         Side,
+			Ticker:       strings.ToUpper(catIdentifier + v.Symbol),
+			Size:         Size,
+			NotionalSize: Price * Size,
+			Price:        Price,
+			ReduceOnly:   v.ReduceOnly,
+			State:        orderStatusToStatus(v.OrderStatus),
+			Conditional:  v.CloseOnTrigger,
+			Created:      time.Unix(CreateTime/1000, 0),
+		})
+	}
+	return or
+}
+
 func toFasPosition(Side string, Ticker string, size, notionalSize, avgPrice, pnl, liqPrice string, created string) *fas.Position {
 	var side bool
 	if Side == "Buy" {
@@ -280,4 +373,18 @@ func toFasPosition(Side string, Ticker string, size, notionalSize, avgPrice, pnl
 		UPNL:             Pnl,
 		Created:          time.Unix(Created/1000, 0),
 	}
+}
+
+type Orders []fas.Order
+
+func (o Orders) Len() int {
+	return len(o)
+}
+
+func (o Orders) Less(i, j int) bool {
+	return o[i].Created.Unix() < o[j].Created.Unix()
+}
+
+func (o Orders) Swap(i, j int) {
+	o[i], o[j] = o[j], o[i]
 }

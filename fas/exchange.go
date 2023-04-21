@@ -50,6 +50,8 @@ type Privat interface {
 	Position(ticker string) (*Position, error)
 	//FundingHistory No Ticker or nil equal all Coins
 	FundingHistory(ticker []string, start, end time.Time) ([]FundingPayment, error)
+	//GetOrderHistory Returns Historical Orders. Orders that got cancelled filled etc
+	GetOrderHistory(ticker []string, start, end time.Time) ([]Order, error)
 }
 
 type Streamer interface {

@@ -38,7 +38,7 @@ func (b *Public) Kline(ticker string, resolution int64, start time.Time, endTime
 	cat, ticker := categoryTicker(ticker)
 
 	resString := resolutionToString(newRes)
-	for {
+	for { // check st > end to save a api call
 		c, err := b.kline(cat, ticker, resString, st, end)
 		if err != nil {
 			log.Println(st, end)

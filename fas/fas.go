@@ -27,6 +27,7 @@ type Order struct {
 	ReduceOnly   bool
 	State        OrderState // Orderstate
 	Conditional  bool       // true if its conditional order
+	Created      time.Time
 }
 
 type Position struct {
