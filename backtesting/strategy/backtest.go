@@ -58,7 +58,7 @@ func (bt *BackTest) AddStrategy(buy, sell ta.Condition, Name string) {
 	parameters := bt.Parameters
 	var tempBalance float64
 
-	//Trades get Created here, this is a Simple Backtest. It does not support, having buy and sell strategies running next to each other.
+	//Trades get Created here, this is a Simple Backtest. It does not support, having buy and sell strategies simultan next to each other.
 	for j := 0; j < len(ch)-1; j++ {
 		if l[j] {
 			for i := 0; i < min(len(indexShort), parameters.Pyramiding); i++ {
@@ -114,8 +114,7 @@ func (bt *BackTest) AddStrategy(buy, sell ta.Condition, Name string) {
 }
 
 /*
-	SetIndicator, fills the [][]SafeFloat with Series, Close etc is also a Series
-
+SetIndicator, fills the [][]SafeFloat with Series, Close etc is also a Series
 Be aware that indicators can only be set before strategies get added.
 */
 func (bt *BackTest) SetIndicators(indicators []ta.Series) *BackTest {

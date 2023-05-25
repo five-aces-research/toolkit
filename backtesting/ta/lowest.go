@@ -19,9 +19,9 @@ func Lowest(src Series, l int) Series {
 	lo, pos := lowest(f[:l]...)
 	d = append(d, lo)
 	for i := l; i < len(f); i++ {
-		if pos < i-l {
+		if pos < i {
 			lo, pos = lowest(f[i-l : i]...)
-			pos += i
+			pos += i - l
 		}
 		if f[i] <= lo {
 			lo = f[i]

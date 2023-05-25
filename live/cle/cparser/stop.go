@@ -12,6 +12,8 @@ type Stop struct {
 	P      StopPrice
 }
 
+//	stop buy btc-perp [-o, -p]
+
 func ParseStop(tk []clexer.Token) (o *Stop, err error) {
 	o = new(Stop)
 	if len(tk) < 3 {

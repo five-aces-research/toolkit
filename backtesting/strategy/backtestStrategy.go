@@ -20,6 +20,24 @@ func (bt *BackTestStrategy) ChangeSortAlgo(fn func(b *BackTestStrategy) float64)
 	bt.sortAlgo = fn
 }
 
+// CalculatePNL Total PNL
+func (bt *BackTestStrategy) CalculatePNL() {
+	var tpnl float64
+	var win int
+
+	for _, v := range bt.tr {
+		pnl := v.RealisedPNL()
+		if pnl > 0 {
+			win++
+		}
+		tpnl += pnl
+	}
+
+	bt.Winrate = float64(win) / float64(len(bt.tr)) * 100
+	bt.TotalPnl = tpnl
+	bt.AvgTrade = bt.TotalPnl / float64(len(bt.tr))
+}
+
 func LessPnl(b *BackTestStrategy) float64 {
 	return b.TotalPnl
 }
@@ -44,4 +62,8 @@ func (t BackTestStrategies) Swap(i, j int) {
 
 func (t BackTestStrategies) Len() int {
 	return len(t)
+}
+
+func (bt BackTestStrategy) Trade() []*Trade {
+	return bt.tr
 }

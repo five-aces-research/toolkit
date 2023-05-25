@@ -7,12 +7,18 @@ import (
 )
 
 type Trade struct {
-	Side                             bool    // True = Long, False = Short
-	AvgBuy, AvgSell, avgPrice        float64 //the AvgBuy/Sell is needed to calculate realisedPNL, avgPrice is used for PNLCandle
-	EntrySignalTime, CloseSignalTime time.Time
+	Side bool `json:"side"` // True = Long, False = Short
+	//AvgBuy/Sell is needed to calculate realisedPNL, avgPrice is used for PNLCandle
+	AvgBuy          float64 `json:"avg_buy"`
+	AvgSell         float64 `json:"avg_sell"`
+	avgPrice        float64
+	EntrySignalTime time.Time `json:"entry_signal_time"`
+	CloseSignalTime time.Time `json:"close_signal_time"`
 
-	Fills                      []Fill
-	BuySize, SellSize, NetSize float64
+	Fills    []Fill `json:"-"`
+	BuySize  float64
+	SellSize float64
+	NetSize  float64
 	//The PNL starts with the EntrySignalTime. Every Tick represents 1 Candle
 	//This information is needed to calculate the Overall PNL of the Indicator
 	Pnl       []float64

@@ -24,15 +24,15 @@ func ShortestLenOfArray[T any](f ...[]T) (int, int) {
 }
 
 func highest[T calc](f ...T) (T, int) {
-	var low T = f[0]
+	var high T = f[0]
 	var position int = 0
 	for i := 1; i < len(f); i++ {
-		if f[i] > low {
-			low = f[i]
+		if f[i] > high {
+			high = f[i]
 			position = i
 		}
 	}
-	return low, position
+	return high, position
 }
 
 func MinInt(f ...int) (val int, position int) {
@@ -47,8 +47,8 @@ func MinInt(f ...int) (val int, position int) {
 }
 
 func lowest[T calc](f ...T) (T, int) {
-	var low T = f[1]
-	var position int = 1
+	var low T = f[0]
+	var position int = 0
 	for i := 1; i < len(f); i++ {
 		if f[i] < low {
 			low = f[i]

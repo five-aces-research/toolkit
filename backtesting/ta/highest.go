@@ -20,9 +20,9 @@ func Highest(src Series, l int) Series {
 	high, pos := highest(f[:l]...)
 	d = append(d, high)
 	for i := l; i < len(f); i++ {
-		if pos < i-l {
+		if pos < i {
 			high, pos = highest(f[i-l : i]...)
-			pos += i
+			pos += i - l
 		}
 		if f[i] >= high {
 			high = f[i]

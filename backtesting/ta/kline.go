@@ -7,6 +7,7 @@ import (
 
 type Chart interface {
 	Data() []fas.Candle
+	Name() string
 	ResolutionStartTime
 }
 
