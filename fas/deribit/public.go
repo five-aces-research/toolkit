@@ -124,6 +124,7 @@ func (p *Public) GetTickerInfo(ticker string) (fas.TickerInfo, error) {
 		Ticker:      ticker,
 		BaseCoin:    res.BaseCurrency,
 		QuoteCoin:   res.QuoteCurrency,
+		SettleCoin:  res.SettlementCurrency,
 		TickSize:    res.TickSize,
 		QtyStep:     res.MinTradeAmount,
 		MinOrderQty: res.MinTradeAmount,

@@ -27,11 +27,11 @@ type Strategy struct {
 }
 
 type LiveTrade struct {
-	ee  fas.Privat
+	ee  fas.Private
 	ews fas.Streamer
 }
 
-func New(ee fas.Privat, ews fas.Streamer) (*LiveTrade, error) {
+func New(ee fas.Private, ews fas.Streamer) (*LiveTrade, error) {
 	lt := new(LiveTrade)
 
 	// Check Private Valid.
@@ -59,7 +59,7 @@ func (lt *LiveTrade) AddStrategy(str *Strategy, parameters ...any) error {
 	return nil
 }
 
-func execFunc(ep fas.Privat, ch []fas.Candle, tick chan fas.WsCandle, str *Strategy) {
+func execFunc(ep fas.Private, ch []fas.Candle, tick chan fas.WsCandle, str *Strategy) {
 	for {
 		c := <-tick
 		if !c.Finished {

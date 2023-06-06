@@ -6,7 +6,7 @@ type Exchanger interface {
 	//Name returns the Exchange Name and Subaccount Name if available
 	Name() string
 	Public
-	Privat
+	Private
 }
 
 type OpenInterest struct {
@@ -14,6 +14,7 @@ type OpenInterest struct {
 	Timestamp time.Time
 }
 
+// Public interface are all function that are needed to grab data from an exchange
 type Public interface {
 	//Kline returns candlestickdata, ordered ascending, resolution in minutes
 	Kline(ticker string, resolution int64, start time.Time, end time.Time) ([]Candle, error)
@@ -29,13 +30,12 @@ type Public interface {
 	GetOpenInterest(ticker string, resolution int64, start, end time.Time) ([]OpenInterest, error)
 }
 
-type Privat interface {
-	//SetOrder sets an Order. Returns the set order. Size in USD if available
+// Private interface is a collection of functions that are used for all cases where authentification is needed
+type Private interface {
+	//SetOrder sets an Order. Returns the set order. Size always in USD if available
 	SetOrder(side bool, ticker string, price float64, size float64, marketOrder, postOnly, reduceOnly bool) (Order, error)
-	//BlockOrder
-	BlockOrder(side bool, ticker string, trigger bool, priceSize [][2]float64, reduceOnly bool) ([]Order, error)
-	//OpenOrders Returns open orders for given ticker
-	OpenOrders(side bool, ticker string) ([]Order, error)
+	//OpenOrders All=0, Buy=1 Sell=-1 Returns open orders for given ticker, "" return all open orders
+	OpenOrders(side int, ticker string) ([]Order, error)
 	//SetTriggerOrder set an TriggerOrder
 	SetTriggerOrder(side bool, ticker string, price float64, size float64, orderType string, reduceOnly bool) (Order, error)
 	//Cancel All=0, Buy=1 Sell=-1 orders on given ticker. No ticker means all orders get cancelled. Return is the amount of orders that got cancelled
@@ -46,16 +46,24 @@ type Privat interface {
 	Collateral(ticker string) (total float64, free float64, err error)
 	//OpenPositions returns all Open positions
 	OpenPositions() ([]Position, error)
-	//Position return given Position
+	//Position return given Position nil, if does not exist
 	Position(ticker string) (*Position, error)
 	//FundingHistory No Ticker or nil equal all Coins
 	FundingHistory(ticker []string, start, end time.Time) ([]FundingPayment, error)
-	//GetOrderHistory Returns Historical Orders. Orders that got cancelled filled etc
+	//GetOrderHistory Returns Historical Orders. Orders that got cancelled filled; No Ticker or nil equal all Coins
 	GetOrderHistory(ticker []string, start, end time.Time) ([]Order, error)
+	//AccountInformation returns the Total Wallet Balance and a Sum of all Coins owned
+	AccountInformation() (Wallet, error)
+	//GetTransfers returns the latest transfers done by the account
+	GetTransfers(ticker string, st time.Time, et time.Time, OptionalType ...TransferType) ([]Transfer, error)
+	//GetFeeRate get the trading fee rate
+	GetFeeRate(ticker ...string) ([]FeeRate, error)
+	BlockOrder(side bool, ticker string, b bool, prices [][2]float64, only bool) ([]Order, error)
 }
 
 type Streamer interface {
 	Kline(ticker string, resolution int64, start time.Time, end time.Time) ([]Candle, error)
 	LiveKline(ticker string, resolution int64, parameters ...any) (chan WsCandle, error)
+	Ticker(ticker string) (chan Ticker, error)
 	Ping() error
 }

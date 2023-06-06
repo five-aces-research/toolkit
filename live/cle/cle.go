@@ -7,7 +7,7 @@ import (
 
 type CLEIO interface {
 	fas.Public
-	fas.Privat
+	fas.Private
 }
 
 func Execute(Commands []string, f CLEIO, writer io.Writer) error {

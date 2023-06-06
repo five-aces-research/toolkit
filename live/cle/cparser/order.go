@@ -18,9 +18,7 @@ type Order struct {
 func ParseOrder(Side string, tk []clexer.Token) (o *Order, err error) {
 	o = &Order{}
 
-	if Side == "buy" {
-		o.Side = true
-	}
+	o.Side = Side == "buy"
 	var a Amount
 
 	if len(tk) < 3 {
@@ -34,16 +32,16 @@ func ParseOrder(Side string, tk []clexer.Token) (o *Order, err error) {
 	}
 
 	switch tk[1].Type {
-	case clexer.FLOAT: // 5.2 -> 5.2 Coins
+	case clexer.FLOAT: // u500 -> 500 USD worth of the coin
 		a.Type = FIAT
-	case clexer.UFLOAT: // u500 -> 500 USD worth of the coin
+	case clexer.UFLOAT: // 5.2 -> 5.2 Coins
 		a.Type = COIN
 	case clexer.PERCENT: // 100% -> 100% of your Free Collateral of the Coin
 		a.Type = ACCOUNT
 	case clexer.POSITION: // -position -> 100% of the Positions Size
 		a.Type = POSITION
 	default:
-		return nil, nerr(empty, fmt.Sprintf("Error Parse Order, false Order Size of type"))
+		return nil, nerr(empty, fmt.Sprintf("Error Parse Order, false Order Size of type %v", tk[2].Value))
 	}
 	a.Ticker = o.Ticker
 	a.Value, err = strconv.ParseFloat(tk[1].Value, 64)

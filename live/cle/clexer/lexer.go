@@ -47,31 +47,32 @@ stop buy btc-perp [position, u100,0.1] -low 5h
 */
 
 const (
-	VARIABLE     TokenType = iota
-	TICKER                 // btc-perp
-	SIDE                   // buy, sell
-	STOP                   // stop
-	FLOAT                  // 100 => 100 $ of btc
-	UFLOAT                 // 100u  u = unitFloat => buying 100 btc
-	PERCENT                //
-	DFLOAT                 // -200 differenceFloat => 200 below/above the price
-	ASSIGN                 // = assign to a variable
-	FLAG                   // -l -le
-	DELETE                 // delete a b c
-	FUNC                   // func(a,b,c) creating function
-	DURATION               // 4h 1d 30
-	LBRACKET               // (
-	RBRACKET               // )
-	MARKET                 // -market
-	SOURCE                 // -high -low -open -close
-	CANCEL                 // cancel
-	CLOSE                  // close
-	FUNDINGPAYS            // fpay | fundingpayments
-	POSITION               // -position
-	FUNDINGRATES           // fundingrates
-	READONLY               // -readonly
-	REDUCEONLY             // -reduceonly
-	SUM                    // -sum
+	VARIABLE      TokenType = iota
+	TICKER                  // btc-perp
+	SIDE                    // buy, sell
+	STOP                    // stop
+	FLOAT                   // 100 => 100 $ of btc
+	UFLOAT                  // 100u  u = unitFloat => buying 100 btc
+	PERCENT                 //
+	DFLOAT                  // -200 differenceFloat => 200 below/above the price
+	ASSIGN                  // = assign to a variable
+	FLAG                    // -l -le
+	DELETE                  // delete a b c
+	FUNC                    // func(a,b,c) creating function
+	DURATION                // 4h 1d 30
+	LBRACKET                // (
+	RBRACKET                // )
+	MARKET                  // -market
+	SOURCE                  // -high -low -open -close
+	CANCEL                  // cancel
+	CLOSE                   // close
+	FUNDINGPAYS             // fpay | fundingpayments
+	POSITION                // -position
+	POSITIONORDER           // -po
+	FUNDINGRATES            // fundingrates
+	READONLY                // -readonly
+	REDUCEONLY              // -reduceonly
+	SUM                     // -sum
 )
 
 type Token struct {
@@ -149,12 +150,14 @@ func Lexer(input string) (t []Token, err error) {
 						t = append(t, Token{POSITION, "1.0"})
 					case "market":
 						t = append(t, Token{MARKET, "1.0"})
-					case "reduceonly":
+					case "reduceonly", "ro":
 						t = append(t, Token{REDUCEONLY, ""})
 					case "readonly":
 						t = append(t, Token{READONLY, ""})
 					case "sum":
 						t = append(t, Token{SUM, ""})
+					case "openorders", "oo":
+						t = append(t, Token{POSITIONORDER, ""})
 					default:
 						t = append(t, Token{FLAG, ss})
 					}

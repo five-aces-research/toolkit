@@ -14,6 +14,93 @@ type Private struct {
 	Public
 }
 
+func (p *Private) GetOrderHistory(ticker []string, start, end time.Time) ([]fas.Order, error) {
+	//TODO implement me
+	panic("there is no api endpoint for this")
+}
+
+func (p *Private) AccountInformation() (fas.Wallet, error) {
+	var c fas.Wallet
+
+	//BTC
+	or, err := p.d.GetAccountSummary(&models.GetAccountSummaryParams{
+		Currency: "BTC",
+		Extended: false,
+	})
+	if err != nil {
+		return fas.Wallet{}, err
+	}
+
+	res, err := p.d.GetIndex(&models.GetIndexParams{Currency: "BTC"})
+	if err != nil {
+		return c, err
+	}
+	usdVal := or.Equity * res.BTC
+	c.TotalEquity += usdVal
+	c.FreeEquity += or.AvailableFunds * res.BTC
+
+	c.Coins = append(c.Coins, fas.Coin{
+		Coin:     "BITCOIN",
+		Symbol:   or.Currency,
+		Equity:   or.Equity,
+		UsdValue: usdVal,
+	})
+	//ETH
+	or, err = p.d.GetAccountSummary(&models.GetAccountSummaryParams{
+		Currency: "ETH",
+		Extended: false,
+	})
+	if err != nil {
+		return c, err
+	}
+
+	res, err = p.d.GetIndex(&models.GetIndexParams{Currency: "ETH"})
+	if err != nil {
+		return c, err
+	}
+	usdVal = or.Equity * res.ETH
+	c.TotalEquity += usdVal
+	c.FreeEquity += or.AvailableFunds * res.ETH
+
+	c.Coins = append(c.Coins, fas.Coin{
+		Coin:     "ETHEREUM",
+		Symbol:   or.Currency,
+		Equity:   or.Equity,
+		UsdValue: usdVal,
+	})
+
+	//ETH
+	or, err = p.d.GetAccountSummary(&models.GetAccountSummaryParams{
+		Currency: "USDC",
+		Extended: false,
+	})
+	if err != nil {
+		return c, err
+	}
+
+	c.TotalEquity += or.Equity
+	c.FreeEquity += or.AvailableFunds
+
+	c.Coins = append(c.Coins, fas.Coin{
+		Coin:     "USDC",
+		Symbol:   "USDC",
+		Equity:   or.AvailableFunds,
+		UsdValue: or.AvailableFunds,
+	})
+
+	return c, nil
+}
+
+func (p *Private) GetTransfers(ticker string, st time.Time, et time.Time, OptionalType ...fas.TransferType) ([]fas.Transfer, error) {
+	//TODO implement me
+	panic("there is no api endpoint for this")
+}
+
+func (p *Private) GetFeeRate(ticker ...string) ([]fas.FeeRate, error) {
+	//TODO implement me
+	panic("there is no api endpoint for this")
+}
+
 func NewPrivate(name string, public string, private string, testnet bool) *Private {
 	url := deribit.RealBaseURL
 	if testnet {
@@ -38,6 +125,10 @@ func (p *Private) SetOrder(side bool, Ticker string, price float64, sizeInUsd fl
 	tickerInfo, err := p.GetTickerInfo(ticker)
 	if err != nil {
 		return fas.Order{}, err
+	}
+
+	if tickerInfo.SettleCoin == "USDC" || tickerInfo.SettleCoin == "" {
+		sizeInUsd = sizeInUsd / price
 	}
 
 	qtySize := fas.RoundValue(sizeInUsd, tickerInfo.QtyStep)
@@ -99,9 +190,28 @@ func (p *Private) OpenOrders(side bool, ticker string) ([]fas.Order, error) {
 	return o, nil
 }
 
-func (p *Private) SetTriggerOrder(side bool, ticker string, price float64, size float64, orderType string, reduceOnly bool) (fas.Order, error) {
-	//TODO implement me
-	panic("implement me")
+func (p *Private) SetTriggerOrder(side bool, Ticker string, price float64, sizeInUsd float64, orderType string, reduceOnly bool) (fas.Order, error) {
+	ticker := toPerpetual(Ticker)
+
+	tickerInfo, err := p.GetTickerInfo(ticker)
+	if err != nil {
+		return fas.Order{}, err
+	}
+
+	if tickerInfo.SettleCoin == "USDC" || tickerInfo.SettleCoin == "" {
+		sizeInUsd = sizeInUsd / price
+	}
+
+	qtySize := fas.RoundValue(sizeInUsd, tickerInfo.QtyStep)
+
+	qtyPrice := fas.RoundValue(price, tickerInfo.TickSize)
+
+	fmt.Println(qtyPrice, qtySize)
+	if side {
+		return p.buyTrigger(ticker, qtyPrice, qtySize, reduceOnly)
+	} else {
+		return p.sellTrigger(ticker, qtyPrice, qtySize, reduceOnly)
+	}
 }
 
 func (p *Private) Cancel(Side int, ticker string) error {

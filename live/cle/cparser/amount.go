@@ -9,13 +9,15 @@ const (
 	FIAT
 	ACCOUNT
 	POSITION
-	ALL
+	POSITIONORDER
 )
 
 type Amount struct {
-	Ticker string
-	Type   AmountType
-	Value  float64
+	Ticker  string
+	Type    AmountType
+	Value   float64
+	side    bool
+	trigger float64
 }
 
 func (a Amount) GetAmount(f cle.CLEIO) (float64, error) {
@@ -31,6 +33,23 @@ func (a Amount) GetAmount(f cle.CLEIO) (float64, error) {
 	case POSITION:
 		p, err := f.Position(a.Ticker)
 		return p.NotionalSize, err
+	case POSITIONORDER:
+		p, err := f.Position(a.Ticker)
+		if err != nil {
+			return 0, err
+		}
+		totalSize := p.NotionalSize
+		var side int = 1
+		if a.side {
+			side = -1
+		}
+
+		or, err := f.OpenOrders(side, a.Ticker)
+		for _, v := range or {
+			totalSize += v.NotionalSize
+		}
+
+		return totalSize, err
 	}
 	return 0, nerr(empty, "Error Evaluating Amount of Order")
 }

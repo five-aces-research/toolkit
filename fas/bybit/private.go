@@ -17,6 +17,21 @@ type Private struct {
 	Public
 }
 
+func (p *Private) AccountInformation() (fas.Wallet, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p *Private) GetTransfers(ticker string, st time.Time, et time.Time, OptionalType ...fas.TransferType) ([]fas.Transfer, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p *Private) GetFeeRate(ticker ...string) ([]fas.FeeRate, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewPrivate(name string, public string, private string, test bool) *Private {
 	link := bybit.URL
 	if test {
@@ -51,7 +66,7 @@ func (p *Private) BlockOrder(side bool, Ticker string, trigger bool, priceSize [
 	return out, nil
 }
 
-func (p *Private) OpenOrders(side bool, Ticker string) ([]fas.Order, error) {
+func (p *Private) OpenOrders(side int, Ticker string) ([]fas.Order, error) {
 	cat, ticker := categoryTicker(Ticker)
 
 	res, err := p.by.GetOpenOrders(models.GetOpenOrdersRequest{
@@ -66,13 +81,21 @@ func (p *Private) OpenOrders(side bool, Ticker string) ([]fas.Order, error) {
 
 	var out []fas.Order
 
-	for _, o := range res.List {
-		var Side bool
-		if o.Side == "Buy" {
-			Side = true
+	filter := func(OrderSide string) bool {
+		return true
+	}
+	if side >= 1 {
+		filter = func(s string) bool {
+			return s == "Buy"
 		}
+	} else if side <= -1 {
+		filter = func(s string) bool {
+			return s == "Sell"
+		}
+	}
 
-		if Side == side {
+	for _, o := range res.List {
+		if filter(o.Side) {
 			oo := apiOrderToFasOrder(o.OrderId, o.Side, Ticker, o.Qty, o.Price, o.ReduceOnly, o.OrderStatus, false)
 			out = append(out, oo)
 		}
