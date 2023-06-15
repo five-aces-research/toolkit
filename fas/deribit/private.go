@@ -165,7 +165,7 @@ func (p *Private) BlockOrder(side bool, ticker string, trigger bool, priceSize [
 	return out, nil
 }
 
-func (p *Private) OpenOrders(side bool, ticker string) ([]fas.Order, error) {
+func (p *Private) OpenOrders(side int, ticker string) ([]fas.Order, error) {
 	ticker = toPerpetual(ticker)
 	var o []fas.Order
 	or, err := p.d.GetOpenOrdersByInstrument(&models.GetOpenOrdersByInstrumentParams{
@@ -177,7 +177,7 @@ func (p *Private) OpenOrders(side bool, ticker string) ([]fas.Order, error) {
 	}
 
 	Side := "sell"
-	if side {
+	if 1 == side {
 		Side = "buy"
 	}
 

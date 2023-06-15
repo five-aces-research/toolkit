@@ -69,6 +69,8 @@ func ParseStop(tk []clexer.Token) (o *Stop, err error) {
 	if err != nil {
 		return nil, nerr(err, fmt.Sprintf("Error Price Parsing %s is not a Number", tk[0].Value))
 	}
+	o.A = a
+	o.P = p
 
 	return o, err
 }
@@ -87,30 +89,34 @@ type StopPrice struct {
 }
 
 func (s *StopPrice) Execute(f cle.CLEIO, w Communicator, side bool, ticker string, size float64) error {
-	var value float64
-	factor := -1.0
+	var price float64
+	factor := 1.0 // Factor has to be opposite!
 	if side {
-		factor = 1.0
+		factor = -1.0
 	}
 
 	switch s.Type {
 	case PRICE:
-		value = s.Value
+		price = s.Value
 	case DIFFERENCE:
 		mp, err := f.GetMarketPrice(ticker)
 		if err != nil {
 			return nil
 		}
-		value = mp - mp*s.Value
+		price = mp - s.Value*factor
 	case PERCENTPRICE:
 		mp, err := f.GetMarketPrice(ticker)
 		if err != nil {
 			return nil
 		}
-		value = mp - mp*s.Value/100*factor
+		price = mp - mp*s.Value/100*factor
 	}
 
-	or, err := f.SetTriggerOrder(side, ticker, value, size, "trigger", true)
-	w.Write([]byte(fmt.Sprintf("placed stop order %s @ %2.f %2.f ", or.Ticker, or.Price, or.Size)))
+	fmt.Println(side, ticker, price, size, "trigger", true)
+
+	or, err := f.SetTriggerOrder(side, ticker, price, size, "trigger", true)
+	if err == nil {
+		w.Write([]byte(fmt.Sprintf("placed stop order %s @ %2.f %2.f ", or.Ticker, or.Price, or.Size)))
+	}
 	return err
 }

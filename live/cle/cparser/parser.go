@@ -46,7 +46,7 @@ func Parse(tk []clexer.Token, c Communicator) (Parser, error) {
 	case clexer.SIDE: // buy, sell
 		o, err = ParseOrder(tk[0].Value, tk[1:])
 	case clexer.STOP: //stop
-		//o, err = ParseStop(tk[1:])
+		o, err = ParseStop(tk[1:])
 	case clexer.CANCEL: //cancel
 		o, err = ParseCancel(tk[1:])
 	case clexer.CLOSE:

@@ -17,6 +17,10 @@ type Public struct {
 	cache      Cache
 }
 
+func (b Public) Name() string {
+	return "BYBIT"
+}
+
 func NewPublic() *Public {
 	cl, err := bybit.New(nil, bybit.URL, nil, false)
 	if err != nil {

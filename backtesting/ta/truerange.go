@@ -25,3 +25,8 @@ func TrueRange(close, high, low Series) *TRange {
 	s.data = d
 	return s
 }
+
+func ATR(close, high, low Series, l int) Series {
+	tr := TrueRange(close, high, low)
+	return Rma(tr, l)
+}

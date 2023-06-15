@@ -17,6 +17,20 @@ type Public struct {
 	tickerInfo map[string]fas.TickerInfo
 }
 
+func (p *Public) Name() string {
+	return "DERIBIT"
+}
+
+func (p *Public) GetFundingRate(ticker string, start, end time.Time) ([]fas.FundingRate, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p *Public) GetOpenInterest(ticker string, resolution int64, start, end time.Time) ([]fas.OpenInterest, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewPublic(testnet bool) *Public {
 	url := deribit.RealBaseURL
 	if testnet {

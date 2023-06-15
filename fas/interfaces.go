@@ -16,6 +16,8 @@ type OpenInterest struct {
 
 // Public interface are all function that are needed to grab data from an exchange
 type Public interface {
+	//Name returns the Name of the exchange
+	Name() string
 	//Kline returns candlestickdata, ordered ascending, resolution in minutes
 	Kline(ticker string, resolution int64, start time.Time, end time.Time) ([]Candle, error)
 	//MarketPrice return the Market Price of the asked Ticker

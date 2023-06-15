@@ -46,6 +46,8 @@ func getExchangeId(name string) int32 {
 	switch strings.ToUpper(name) {
 	case "BYBIT":
 		return 1
+	case "DERIBIT":
+		return 2
 	default:
 		log.Panicln("not implemented")
 		return 0

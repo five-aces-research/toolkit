@@ -128,3 +128,17 @@ func candleToDBCandle(ticker_id int32, ch []fas.Candle) (res []qq.WriteOHCLVPara
 	}
 	return res
 }
+
+func (pg *Pgx) Update(exchange string, ticker string, res int32) error {
+	_, max, err := pg.GetMinMax(exchange, ticker, res)
+	if err != nil {
+		return err
+	}
+	ex := loadExchanger(getExchangeId(exchange))
+	ch, err := ex.Kline(ticker, int64(res), max.Add(time.Second), time.Now())
+	if err != nil {
+		return err
+	}
+
+	return pg.CopyFromKline(getExchangeId(exchange), ticker, ch)
+}
