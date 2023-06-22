@@ -11,9 +11,9 @@ CREATE TABLE if not exists tickers (
 );
 
 CREATE TABLE IF NOT EXISTS klines(
-    ticker_id int references tickers(ticker_id) NOT NULL ,
+    ticker_id int references tickers(ticker_id) NOT NULL,
     resolution int       NOT NULL,
-    starttime  timestamp NOT NULL,
+    starttime  BIGINT NOT NULL,
     open       float8    not null,
     high       float8    not null,
     close      float8    not null,
@@ -23,11 +23,26 @@ CREATE TABLE IF NOT EXISTS klines(
 );
 
 
-INSERT INTO exchanges (name) VALUES('BYBIT');
+CREATE TABLE IF NOT EXISTS minutes(
+    ticker_id int references tickers(ticker_id) NOT NULL,
+    starttime  BIGINT NOT NULL,
+    open       float8    not null,
+    high       float8    not null,
+    close      float8    not null,
+    low        float8    not null,
+    volume     float8    not null,
+    unique (ticker_id, starttime)
+);
 
+
+
+
+INSERT INTO exchanges (name) VALUES('BYBIT');
+INSERT INTO exchanges (name) VALUES('DERIBIT');
 
 ---- create above / drop below ----
 
+DROP TABLE IF EXISTS minutes;
 DROP TABLE IF EXISTS klines;
 DROP TABLE IF EXISTS tickers;
 DROP TABLE IF EXISTS exchanges;

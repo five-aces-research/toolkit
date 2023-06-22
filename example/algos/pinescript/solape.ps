@@ -1,0 +1,85 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dawn1234
+
+//@version=5
+strategy("Sol Ape 4h", overlay=true, initial_capital = 10000, pyramiding = 2, default_qty_type = strategy.percent_of_equity, default_qty_value = 100)
+
+l1 = input.int(defval = 4, title = "len 1")
+l2 = input.int(defval = 10, title = "len 2")
+
+len = input.int(title = "Lookback min", defval = 6, step = 1)
+prozentL = input.float(title="prozent min Moved for Long", defval=0.4, step = 0.2)
+prozentS = input.float(title="prozent min Moved for Short", defval=0.4, step = 0.2)
+
+asd = prozentL / 100
+asds = prozentS / 100
+
+//KEK
+long(len) =>
+    (close - ta.lowest(len)) / ta.lowest(len)
+
+short(len) =>
+    math.abs((close - ta.highest(len)) / ta.highest(len))
+
+
+conLong = long(len) >= asd
+conShort = short(len) >= asds
+
+oc2 = (open+close)/2
+outR = ta.sma(ta.roc(oc2, l1),2)
+outB1 = ta.ema(outR,l2)
+outB2 = ta.ema(outB1, l2)
+outB = 2*outB1 - outB2
+cc = outR-outB
+
+ccc = ta.sma(cc,2)
+c1 = ccc > ccc[1] and ccc[1] < ccc[2]
+c2 = ccc < ccc[1] and ccc[1] > ccc[2]
+
+//4 hour 0 -0.5
+
+
+testStartYear = input(2019, "Backtest Start Year")
+testStartMonth = input(1, "Backtest Start Month")
+testStartDay = input(1, "Backtest Start Day")
+testPeriodStart = timestamp(testStartYear,testStartMonth,testStartDay,0,0)
+
+testStopYear = input(9999, "Backtest Stop Year")
+testStopMonth = input(12, "Backtest Stop Month")
+testStopDay = input(31, "Backtest Stop Day")
+testPeriodStop = timestamp(testStopYear,testStopMonth,testStopDay,0,0)
+
+
+testPeriod = time >= testPeriodStart and time <= testPeriodStop ? true : false
+
+
+
+
+
+bullDiv(ind, clo)=>
+    ind > ind[1] and clo < clo[1]
+
+var indS = 0.0
+var clS = 0.0
+
+if c1
+    indS := ccc[1]
+    clS := low[1]
+
+
+BullDiv = input.bool(false, "test for bull div")
+
+if testPeriod
+
+
+    if BullDiv
+        if c1 and conLong and bullDiv(indS,clS)
+            strategy.entry("buy", strategy.long)
+        if c2 and conShort
+            strategy.close("buy", qty_percent = 100)
+    else
+        if c1 and conLong
+            strategy.entry("buy", strategy.long)
+        if c2 and conShort
+            strategy.entry("sell", strategy.short)
+    

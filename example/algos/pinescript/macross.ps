@@ -1,0 +1,39 @@
+ //@version=4
+strategy("Best MA", shorttitle="BB", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, pyramiding=3, precision = 5)
+
+
+
+
+fast = input(title="fastLen", defval = 10, step = 5)
+slow = input(title="slowLen",defval = 20,step=5)
+
+src = input(close)
+
+
+fastMa = ema(src,fast)
+slowMa = ema(src,slow)
+
+c1 = crossover(fastMa,slowMa)
+c2 = crossunder(fastMa,slowMa)
+
+
+
+
+
+// Calendar
+startDay = input(defval = 1, title = "Start Day")
+startMonth = input(defval = 1, title = "Start Month")
+startYear = input(defval=2018, title="Start Year")
+endDay = input(defval = 31, title = "End Day")
+endMonth = input(defval = 12, title = "End Month")
+endYear = input(defval = 2022, title = "End Year")
+
+
+start     = timestamp(startYear, startMonth, startDay, 00, 00)  // backtest start window
+finish    = timestamp(endYear, endMonth, endDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // create function "within window of time"
+
+
+if window()
+    strategy.entry("buy", strategy.long, when=c1)
+    strategy.entry("sell", strategy.short, when=c2) 

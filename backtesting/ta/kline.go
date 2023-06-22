@@ -1,13 +1,15 @@
 package ta
 
 import (
-	"github.com/five-aces-research/toolkit/fas"
 	"log"
+
+	"github.com/five-aces-research/toolkit/fas"
 )
 
 type Chart interface {
 	Data() []fas.Candle
 	Name() string
+
 	ResolutionStartTime
 }
 
@@ -50,4 +52,8 @@ func (o *Kline) Resolution() int64 {
 
 func (o *Kline) Name() string {
 	return o.name
+}
+
+func (o *Kline) GetSources() (open, high, close, low Series) {
+	return Open(o), High(o), Close(o), Low(o)
 }

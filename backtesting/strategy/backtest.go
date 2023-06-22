@@ -1,10 +1,12 @@
 package strategy
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/five-aces-research/toolkit/backtesting/strategy/mode"
 	"github.com/five-aces-research/toolkit/backtesting/strategy/size"
 	"github.com/five-aces-research/toolkit/backtesting/ta"
-	"sort"
 )
 
 // BackTest is what it says a struct to backtest
@@ -110,6 +112,7 @@ func (bt *BackTest) AddStrategy(buy, sell ta.Condition, Name string) {
 	sort.Sort(Trades(tr)) // Sort Trades by EntrySignalTime
 	b.tr = tr
 	b.Name = Name
+	b.Ticker = bt.ch.Name()
 	bt.Results = append(bt.Results, b)
 }
 
@@ -152,4 +155,60 @@ func (bt *BackTest) SetIndicators(indicators []ta.Series) *BackTest {
 	}
 	bt.Indicators = indi
 	return bt
+}
+
+func (bt *BackTest) Filter(ConditionName string, op Filter) []*BackTestStrategy {
+	var bb []*BackTestStrategy
+
+	for _, vv := range bt.Results {
+		var tt []*Trade
+		for _, v := range vv.tr {
+			if op(v.Indicator) {
+				tt = append(tt, v)
+			}
+		}
+		bb = append(bb, &BackTestStrategy{
+			Name:       vv.Name + "\t" + ConditionName + " true",
+			tr:         tt,
+			Parameters: vv.Parameters,
+			sortAlgo:   vv.sortAlgo,
+		})
+	}
+	return bb
+}
+
+func (bt *BackTest) Split(ConditionName string, op Filter) []*BackTestStrategy {
+	var bb []*BackTestStrategy
+	for _, vv := range bt.Results {
+		var tt, tf []*Trade
+
+		fmt.Println(len(bt.Results))
+		for _, v := range vv.tr {
+			if op(v.Indicator) {
+				tt = append(tt, v)
+			} else {
+				tf = append(tf, v)
+			}
+		}
+
+		if len(tt) > 0 {
+			bb = append(bb, &BackTestStrategy{
+				Name:       vv.Name + "\t" + ConditionName + " true",
+				Parameters: vv.Parameters,
+				tr:         tt,
+				sortAlgo:   vv.sortAlgo,
+			})
+		}
+		if len(tf) > 0 {
+			bb = append(bb, &BackTestStrategy{
+				Parameters: vv.Parameters,
+				Name:       vv.Name + "\t" + ConditionName + " false",
+				tr:         tf,
+				sortAlgo:   vv.sortAlgo,
+			})
+		}
+	}
+
+	fmt.Println(len(bb))
+	return bb
 }

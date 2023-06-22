@@ -2,8 +2,9 @@ package strategy
 
 import (
 	"errors"
-	"github.com/five-aces-research/toolkit/fas"
 	"time"
+
+	"github.com/five-aces-research/toolkit/fas"
 )
 
 type Trade struct {
@@ -25,6 +26,8 @@ type Trade struct {
 	Indicator []SafeFloat
 	UsdVolume float64
 	Fee       float64
+
+	pnl *float64
 }
 
 func EmptyTrade(Side bool, EntrySignalTime time.Time) *Trade {
@@ -150,6 +153,17 @@ func (t *Trade) Start() time.Time {
 	return t.EntrySignalTime
 }
 
+func (t *Trade) PnlPercent() float64 {
+	if t.pnl == nil {
+		if t.Side {
+			*t.pnl = (t.AvgSell - t.AvgBuy) / t.AvgBuy
+		} else {
+			*t.pnl = -1 * (t.AvgBuy - t.AvgSell) / t.AvgBuy
+		}
+	}
+	return *t.pnl
+}
+
 func (t *Trade) RealisedPNL() float64 {
 	var realisedPNL float64
 	if t.Side {
@@ -167,7 +181,7 @@ type SimpleTrade struct {
 	Side                bool
 	Entry, Exit         float64
 	EntryTime, ExitTime int64
-	indicators          []float64
+	//indicators          []float64
 }
 
 func CreateSimpleTrade(side bool, entry, exit fas.Candle) (SimpleTrade, error) {

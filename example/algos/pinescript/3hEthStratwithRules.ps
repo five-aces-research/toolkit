@@ -1,0 +1,297 @@
+
+//@version=4
+strategy("3h ETH DEC 2020", shorttitle="3h ETH 12.20", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, pyramiding=3)
+
+
+    
+bullDiv(ind, clo)=>
+    ind > ind[1] and clo < clo[1]
+
+hbullDiv(ind,clo)=>
+    ind < ind[1] and clo > clo[1]
+
+strongDiv(ind,clo)=>
+    ind > ind[1] and clo > clo[1]
+
+weakDiv(ind,clo)=> 
+    ind < ind[1] and clo < clo[1]
+    
+    
+//KEK
+long(len) =>
+    (close - lowest(len)) / lowest(len)
+
+short(len) =>
+    abs((close - highest(len)) / highest(len))
+
+string positionType = input(defval="Long", title="Position Type", options=["Long","Short"])
+kaka = positionType == "Long"	
+	
+stopLoss = input(title="Stop-loss %", defval=6.0, step = 0.5)
+len = input(title="Watching Bars for how much it has moved", defval=6)
+prozentL = input(title="prozent min Moved for Long", defval=0.6, step = 0.2)
+prozentS = input(title="prozent min Moved for Short", defval=0.8, step = 0.2)
+enableRisk = input(true)
+
+asd = prozentL / 100
+asds = prozentS / 100
+
+conLong = long(len) >= asd
+conShort = short(len) >= asds
+//
+lengthATR = input(title="Length", defval=14, minval=1)
+smoothing = input(title="Smoothing", defval="VWMA", options=["RMA", "SMA", "EMA", "WMA", "VWMA"])
+
+
+ma_function(source, length) =>
+    if smoothing == "RMA"
+        rma(source, length)
+    else
+        if smoothing == "SMA"
+            sma(source, length)
+        else
+            if smoothing == "EMA"
+                ema(source, length)
+            else
+                if smoothing == "WMA"
+					wma(source, length)
+				else
+					vwma(source, length)
+ 
+srcATR = input(close)
+ATR = ma_function(tr(true), lengthATR)
+eos = stopLoss / 100
+
+atrBull(ATR, mult, srcATR)=>
+    srcATR - ATR*mult
+ 
+atrBear(ATR, mult, srcATR)=>
+    srcATR + ATR*mult
+ 
+multEntry = input(1.5, step = 0.5)
+stopATR1 = kaka ? atrBull(ATR,multEntry, srcATR) : atrBear(ATR, multEntry, srcATR)
+
+
+degen = input(defval = false)
+useVol = input(title = "Use Volume for Smoothing", defval = false)
+maR = input(title="SMI 1", defval=6)
+ma1 = input(title="SMI  2", defval=6)
+outR = sma(sma(hlc3, maR), 2)
+outB1 = sma(outR, ma1)
+outB2 = sma(outB1, ma1)
+outB = 2 * outB1 - 1 * outB2
+cc = outR - outB
+vwma_1 = vwma(cc,2)
+sma_1 = sma(cc, 2)
+ccc = useVol ? vwma_1 : sma_1
+c1 = ccc > ccc[1] and ccc[1] < ccc[2]
+c2 = ccc < ccc[1] and ccc[1] > ccc[2]
+
+//RSI
+rsi = rsi(close, 14)
+
+var bStop = 0.0
+var sStop = 0.0
+
+
+ba = (atrBull(ATR, multEntry, srcATR) + close*(1-eos))/2
+bs = (atrBear(ATR, multEntry, srcATR)+close*(1+eos))/2
+
+if(c1)
+    bStop := (atrBull(ATR, multEntry, srcATR) + close*(1-eos))/2
+ 
+
+if(c2)
+    sStop := (atrBear(ATR, multEntry, srcATR)+close*(1+eos))/2
+
+
+plot(bStop, color = color.green)
+plot(sStop, color = color.red)
+
+
+shortStop = sStop
+longStop = bStop
+
+//
+
+multiplier = 0.5
+bbStdev = stdev(close,20) * multiplier
+bbBase = sma(close,20)
+
+bbUp = bbStdev + bbBase
+bbLo = bbBase - bbStdev
+
+//
+
+src = hlc3
+upper = sum(volume * (change(src) <= 0 ? 0 : src), 14)
+lower = sum(volume * (change(src) >= 0 ? 0 : src), 14)
+mf = sma(rsi(upper, lower),2)
+mfSig = sma(mf,8)
+
+
+//
+
+length = 14
+fastD = 5
+slowD = 8
+percentK = stoch(close, high, low, length)
+stoch = sma(percentK, fastD)
+stochSig = ema(stoch, slowD)
+
+
+//////////////////
+lenHL = 6
+emaHL = 2
+shH = sum(high-close, lenHL)
+loH = sum(close-low,lenHL)
+sh = vwma(shH,2)
+lo = vwma(loH,2)
+
+DAI = 4*(lo-sh)/sh
+DAIEMA = ema(DAI, 6)
+
+//FISHER
+lenF = 9
+
+high_ = 1000 * highest(hl2, lenF)
+low_ = 1000 * lowest(hl2, lenF)
+
+round_(val) =>
+    val > .99 ? .999 : val < -.99 ? -.999 : val
+
+value = 0.0
+value := .66 * ((1000 * hl2 - low_) / max(high_ - low_, .001) - .5) + .67 * nz(value[1])
+
+fish = 0.0
+fish := .5 * log((1 + value) / max(1 - value, .001)) + .5 * nz(fish[1])
+fish2 = fish[1]
+
+//MACD
+fast_length = 12
+slow_length = 26
+signal_length = 9
+srcc = close
+
+// Calculating
+fast_ma = ema(srcc, fast_length)
+slow_ma = ema(srcc, slow_length)
+macd = (fast_ma - slow_ma) / slow_ma * 100
+signal = ema(macd, signal_length)
+hist = macd - signal
+
+//TD
+TD = 0
+TD := close > close[4] ? nz(TD[1]) + 1 : 0
+TS = 0
+TS := close < close[4] ? nz(TS[1]) + 1 : 0
+
+
+//VIX
+
+pd = 22
+wvf = ((highest(close, pd)-low)/(highest(close, pd)))*100
+
+Hvix = wvf < 11
+
+// DAI, DAIEMA, wvf, ccc, rsi, TDUpK, TDDnK, stochF, stochS, fish, fish2, macd, signal, hist
+
+
+rsiSig = sma(rsi, 8)
+
+rsiPos = rsi>rsiSig
+fishPos = fish > fish2
+daiPos = DAI > DAIEMA
+daiCon2 = DAI > 0
+
+macdPos = hist > 0
+smaPos = close > sma(close, 84)
+
+upPos = close > bbUp
+loPos = close > bbLo
+
+mfPos = mf > mfSig
+stochPos = stoch > stochSig
+
+
+
+enable1 = input(defval=true)
+enable2 = input(defval=true)
+enable3 = input(defval=true)
+enable4 = input(defval=true)
+enable5 = input(defval=true)
+enable6 = input(defval=true)
+enable7 = input(defval=true)
+
+
+
+
+//Buyconditions new//
+con1 = enable1 ? stoch > 30 and macd < 0 and not(loPos) : false
+con2 = enable2 ?  rsi > 30 and rsi < 60 and not(stochPos) and macd < 0 and not(daiPos) and loPos : false
+con3 = enable3 ? not(daiCon2) and mf > 30 and mf < 60 and mfPos : false
+con4 = enable4 ?  rsi > 60 and rsi < 90 and macdPos and daiCon2 and mf > 35 and mf < 90 : false
+con5 = enable5 ?  smaPos and mfPos and not(upPos) : false
+con6 = enable6 ? mfPos and fish < -0.5 and fish > -3 : false
+con7 = enable7 ? macd < -3.5 and not(loPos) : false
+
+
+
+buyCon = con1 or con2 or con3 or con4  or con5 or con6 or con7
+//SHORTCONDITIONS NEW
+senable1 = input(defval=true)
+senable2 = input(defval=true)
+senable3 = input(defval=true)
+senable4 = input(defval=true)
+senable5 = input(defval=true)
+senable6 = input(defval=true)
+senable7 = input(defval=true)
+senable8 = input(defval=true)
+senable9 = input(defval=true)
+
+
+
+son1 = senable1 ? stoch > 20 and stoch < 70 and rsi > 30 and rsi < 50 and rsiPos and mfPos : false
+son2 = senable2 ? stochPos and rsi < 70 and TD >= 1 and TD <= 4 : false
+son3 = senable3 ? fish < 0 and not(macdPos) and ccc < 0 : false
+son4 = senable4 ? rsiPos and daiCon2 and TD >= 1 and TD <= 4 : false
+son5 = senable5 ? not(rsiPos) and not(daiPos) and mf < 30 : false
+son6 = senable6 ?  rsiPos and daiPos and mf > 60 : false
+son7 = senable7 ? macd < -0.5 and loPos and not(upPos) : false
+son8 = senable8 ? daiCon2 and not(daiPos) and mf < 60 and not(upPos) : false
+son9 = senable9 ? not(fishPos) and TD >= 4 and TD <= 8 : false
+
+
+sellCon = son1 or son2 or son3 or son4 or son5 or son6 or son7 or son8 or son9
+
+
+//TIME
+
+startDay = input(defval = 1, title = "Start Day")
+startMonth = input(defval = 1, title = "Start Month")
+startYear = input(defval=2018, title="Start Year")
+endDay = input(defval = 31, title = "End Day")
+endMonth = input(defval = 12, title = "End Month")
+endYear = input(defval = 2020, title = "End Year")
+start     = timestamp(startYear, startMonth, startDay, 00, 00)  // backtest start window
+finish    = timestamp(endYear, endMonth, endDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // 
+	
+cockLong =  buyCon
+cockShort = sellCon
+//ACTUAL	
+//strategy.entry("buy", strategy.long, when=c1 and conLong and  (cockLong))	
+//strategy.close("buy", when=c2 and conShort)// and cockShort)
+//strategy.entry("sell", strategy.short, when=c2 and conShort and cockShort)
+//strategy.close("sell", when=c1 and conLong and  degen cockLong))
+if window()
+    if kaka
+        strategy.entry("buy", strategy.long, when=c1 and conLong and  (cockLong))
+        strategy.exit("bracket1", "buy", stop=enableRisk ? longStop : na, when = c1)//and (cockLong))
+        strategy.close("buy", when=c2 and conShort and (degen ? cockShort : true))
+    else
+	    strategy.entry("sell", strategy.short, when=c2 and conShort and cockShort) 
+	    strategy.exit("bracket2", "sell", stop=enableRisk ? shortStop : na, when = c2)// and cockShort)
+	    strategy.close("sell", when=c1 and conLong and  (degen ? cockLong : true))
+//https://alertatron.com/webhook/incoming/7a2aaf9c-0de8-43e4-b65c-250f62427ce3  as sa
+

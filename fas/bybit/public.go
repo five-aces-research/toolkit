@@ -2,13 +2,14 @@ package bybit
 
 import (
 	"fmt"
-	"github.com/DawnKosmos/bybit-go5"
-	"github.com/DawnKosmos/bybit-go5/models"
-	"github.com/five-aces-research/toolkit/fas"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/DawnKosmos/bybit-go5"
+	"github.com/DawnKosmos/bybit-go5/models"
+	"github.com/five-aces-research/toolkit/fas"
 )
 
 type Public struct {
@@ -42,16 +43,15 @@ func (b *Public) Kline(ticker string, resolution int64, start time.Time, endTime
 	cat, ticker := categoryTicker(ticker)
 
 	resString := resolutionToString(newRes)
-	for { // check st > end to save a api call
+	for {
 		c, err := b.kline(cat, ticker, resString, st, end)
 		if err != nil {
 			log.Println(st, end)
 			return hp, err
 		}
-		if len(c) < 2 {
+		if len(c) < 1 {
 			break
 		}
-
 		hp = append(c, hp...)
 		end = hp[0].StartTime.UnixMilli() - 1000
 	}

@@ -1,0 +1,47 @@
+ //@version=4
+strategy("Stoch Strat", shorttitle="ST", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, pyramiding=3, precision = 5)
+
+
+length = input(14, minval=1, title="%K")
+fastD = input(6, minval=1, title="%D")
+slowD = input(5, minval=1, title="Slow%D")
+hlSmooth = input(title="High-Low smooth length", defval=3)
+nn = input(title="Zero Lag EMA of Slow Stochastic", defval=22)
+highS1 = ema(high, hlSmooth)
+lowS1 = ema(low, hlSmooth)
+highS = highS1 * 2 - ema(highS1, hlSmooth)
+lowS = lowS1 * 2 - ema(lowS1, hlSmooth)
+percentK = stoch(close, highS, lowS, length)
+percentD = sma(percentK, fastD)
+slow_percentD = sma(percentD, slowD)
+
+
+//Signal Line
+
+nnn = ema(slow_percentD, nn)
+nnn2 = ema(nnn, nn)
+r = 2 * nnn - nnn2
+
+c1 = crossover(percentD,slow_percentD )
+c2 = crossunder(percentD,slow_percentD )
+
+
+
+
+// Calendar
+startDay = input(defval = 1, title = "Start Day")
+startMonth = input(defval = 1, title = "Start Month")
+startYear = input(defval=2018, title="Start Year")
+endDay = input(defval = 31, title = "End Day")
+endMonth = input(defval = 12, title = "End Month")
+endYear = input(defval = 2022, title = "End Year")
+
+
+start     = timestamp(startYear, startMonth, startDay, 00, 00)  // backtest start window
+finish    = timestamp(endYear, endMonth, endDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // create function "within window of time"
+
+
+if window()
+    strategy.entry("buy", strategy.long, when=c1)
+    strategy.entry("sell", strategy.short, when=c2) 

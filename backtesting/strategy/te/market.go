@@ -2,28 +2,29 @@ package te
 
 import (
 	"errors"
+	"time"
+
 	"github.com/five-aces-research/toolkit/backtesting/strategy"
 	"github.com/five-aces-research/toolkit/backtesting/ta"
 	"github.com/five-aces-research/toolkit/fas"
-	"time"
 )
 
-type Market struct {
+type MarketOrder struct {
 	size                float64
 	stopLong, stopShort ta.Series
 }
 
-func NewMarketOrder(size float64) *Market {
-	return &Market{size: size}
+func Market(size float64) *MarketOrder {
+	return &MarketOrder{size: size}
 }
 
-func (m *Market) Stop(long, short ta.Series) *Market {
+func (m *MarketOrder) Stop(long, short ta.Series) *MarketOrder {
 	m.stopLong = long
 	m.stopShort = short
 	return m
 }
 
-func (m *Market) CreateTrade(Side bool, ch []fas.Candle, exitCandle int, indicators []strategy.SafeFloat, sizeInUsd float64, fee strategy.Fee, pnlgraph bool) (*strategy.Trade, error) {
+func (m *MarketOrder) CreateTrade(Side bool, ch []fas.Candle, exitCandle int, indicators []strategy.SafeFloat, sizeInUsd float64, fee strategy.Fee, pnlgraph bool) (*strategy.Trade, error) {
 	if exitCandle == 0 {
 		return nil, errors.New("same candle")
 	}
@@ -60,7 +61,7 @@ func (m *Market) CreateTrade(Side bool, ch []fas.Candle, exitCandle int, indicat
 
 }
 
-func (m *Market) GetInfo() strategy.TEInfo {
+func (m *MarketOrder) GetInfo() strategy.TEInfo {
 	return strategy.TEInfo{
 		Name:             "Market Orders",
 		Info:             "",

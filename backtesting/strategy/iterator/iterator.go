@@ -19,6 +19,18 @@ type Iter struct {
 	Fns        []*func(src ta.Series, l int) ta.Series
 }
 
+/*
+Iter are for loops, that help you to interate your strategy with different parameters
+First the Iterator interface needs to be implemented for your strategy, than parameter options have to be added
+See the example folder for an easy example
+*/
+func New(it Iterator) *Iter {
+	iter := new(Iter)
+	iter.Parameter, iter.Srcs, iter.Fns = it.Addresses()
+	iter.it = it
+	return iter
+}
+
 type iterator interface {
 	Next() bool
 	Iterate()

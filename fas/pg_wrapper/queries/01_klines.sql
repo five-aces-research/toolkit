@@ -24,5 +24,5 @@ VALUES ($1,$2,$3,$4,$5,$6,$7,$8);
 SELECT name FROM tickers;
 
 -- name: MinAndMax :one
-SELECT MAX(starttime)::timestamp as Max, Min(starttime)::timestamp as Min FROM klines
+SELECT COALESCE(MAX(starttime),0)::BIGINT as Max, COALESCE(Min(starttime),0)::BIGINT as Min FROM klines
 WHERE ticker_id = $1 and resolution = $2;

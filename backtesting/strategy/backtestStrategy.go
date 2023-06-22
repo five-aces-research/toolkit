@@ -2,6 +2,7 @@ package strategy
 
 type BackTestStrategy struct {
 	Name       string
+	Ticker     string
 	Parameters Parameter
 
 	//All the trades that got executed

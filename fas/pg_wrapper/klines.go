@@ -3,12 +3,12 @@ package pg_wrapper
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/five-aces-research/toolkit/fas"
 	"github.com/five-aces-research/toolkit/fas/pg_wrapper/qq"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
-	"strings"
-	"time"
 )
 
 func (pg *Pgx) GetMinMax(exchange, ticker string, res int32) (min, max time.Time, err error) {
@@ -26,38 +26,7 @@ func (pg *Pgx) GetMinMax(exchange, ticker string, res int32) (min, max time.Time
 		TickerID:   id,
 		Resolution: res,
 	})
-	return r.Min.Time, r.Max.Time, err
-}
-
-func (pg *Pgx) Klines(exchange, ticker string, st time.Time, et time.Time, res int32) ([]fas.Candle, error) {
-	exchangeId := getExchangeId(exchange)
-	ticker = strings.ToUpper(ticker)
-	id, err := pg.q.GetTickerId(ctx, qq.GetTickerIdParams{
-		ExchangeID: exchangeId,
-		Name:       ticker,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	dbch, err := pg.q.ReadOHCL(ctx, qq.ReadOHCLParams{
-		St: pgtype.Timestamp{
-			Time:             st,
-			InfinityModifier: 0,
-			Valid:            true,
-		},
-		TickerID:   id,
-		Resolution: res,
-		Et: pgtype.Timestamp{
-			Time:             et,
-			InfinityModifier: 0,
-			Valid:            true,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return dbchToCandle(dbch), nil
+	return time.Unix(r.Min, 0), time.Unix(r.Max, 0), err
 }
 
 func dbchToCandle(dbch []qq.ReadOHCLRow) []fas.Candle {
@@ -69,7 +38,7 @@ func dbchToCandle(dbch []qq.ReadOHCLRow) []fas.Candle {
 			Low:       v.Low,
 			Open:      v.Open,
 			Volume:    v.Volume,
-			StartTime: v.Starttime.Time,
+			StartTime: time.Unix(v.Starttime, 0),
 		})
 	}
 	return ch
@@ -93,8 +62,9 @@ func (pg *Pgx) CopyFromKline(exchangeId int32, ticker string, ch []fas.Candle) e
 			return err
 		}
 	}
+	resolution := (ch[1].StartTime.Unix() - ch[0].StartTime.Unix()) / 60
 
-	dbch := candleToDBCandle(id, ch)
+	dbch := candleToDBCandle(id, ch, int32(resolution))
 	if dbch == nil {
 		return errors.New("Error Candle")
 	}
@@ -104,26 +74,21 @@ func (pg *Pgx) CopyFromKline(exchangeId int32, ticker string, ch []fas.Candle) e
 	return err
 }
 
-func candleToDBCandle(ticker_id int32, ch []fas.Candle) (res []qq.WriteOHCLVParams) {
-	if len(ch) < 3 {
+func candleToDBCandle(ticker_id int32, ch []fas.Candle, resolution int32) (res []qq.WriteOHCLVParams) {
+	if len(ch) == 0 {
 		return nil
 	}
-	resolution := (ch[1].StartTime.Unix() - ch[0].StartTime.Unix()) / 60
 
 	for _, v := range ch {
 		res = append(res, qq.WriteOHCLVParams{
 			TickerID:   ticker_id,
-			Resolution: int32(resolution),
-			Starttime: pgtype.Timestamp{
-				Time:             v.StartTime,
-				InfinityModifier: 0,
-				Valid:            true,
-			},
-			Open:   v.Open,
-			High:   v.High,
-			Close:  v.Close,
-			Low:    v.Low,
-			Volume: v.Volume,
+			Resolution: resolution,
+			Starttime:  v.StartTime.Unix(),
+			Open:       v.Open,
+			High:       v.High,
+			Close:      v.Close,
+			Low:        v.Low,
+			Volume:     v.Volume,
 		})
 	}
 	return res

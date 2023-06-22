@@ -1,0 +1,238 @@
+//@version=4
+
+strategy("WAVETREND STRATEGY", shorttitle="WT ST", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, pyramiding=0)
+
+// FUNCTIONS {  
+
+// MA Selector
+ma(matype, src, length) =>
+    if matype == "RMA"
+        rma(src, length)
+    else
+        if matype == "SMA"
+            sma(src, length)
+        else
+            if matype == "EMA"
+                ema(src, length)
+            else
+                if matype == "WMA"
+                    wma(src, length)
+                else
+                    src
+
+// } FUNCTIONS  
+
+
+// PARAMETERS {
+
+// WaveTrend Channel Length
+n1 = input(7, "WT Channel Length")
+// WaveTrend Average Length
+n2 = input(14, "WT Average Length")
+
+// WaveTrend MA Params
+wtMA = input(defval="EMA", title="WT MA Type", options=["RMA", "SMA", "EMA", "WMA"])
+wtMA1 = input(defval="EMA", title="WT MA Type 1", options=["RMA", "SMA", "EMA", "WMA"])
+wtMA2 = input(defval="WMA", title="WT MA Type 2", options=["RMA", "SMA", "EMA", "WMA"])
+wtMA3 = input(defval="SMA", title="WT MA Type 3", options=["RMA", "SMA", "EMA", "WMA"])
+wtMA4 = input(defval="EMA", title="WT MA Type 4", options=["RMA", "SMA", "EMA", "WMA"])
+wtMA5 = input(defval="WMA", title="WT MA Type 5", options=["RMA", "SMA", "EMA", "WMA"])
+
+// WaveTrend Overbought & Oversold lines
+obLevel = input(53, "WT Overbought Level 1")
+obLevel2 = input(60, "WT Overbought Level 2")
+obLevel3 = input(38.2, "WT Overbought Level 3 (fib)")
+obLevel4 = input(61.8, "WT Overbought Level 4 (fib)")
+osLevel = input(-53, "WT Oversold Level 1")
+osLevel2 = input(-60, "WT Oversold Level 2")
+osLevel3 = input(-80, "WT Oversold Level 3")
+osLevel4 = input(-38.2, "WT Oversold Level 4 (fib")
+osLevel5 = input(61.8, "WT Oversold Level 5 (fib")
+
+// WaveTrend MA Source
+AP=input(hlc3, "source",type=input.source)
+useHA=input(true,"Use heikin ashi candles?")
+ha_AP=security(heikinashi(syminfo.tickerid), timeframe.period, AP)
+ap = useHA?ha_AP:AP
+//ap = input(ohlc4, "WaveTrend MA Source")
+
+// WaveTrend MA Length
+sp = input(3, "WaveTrend MA Length 1")
+sp1 = input(8, "WaveTrend MA Length 2")
+sp2 = input(13, "WaveTrend MA Length 3")
+
+// RSI Divergence detector ranges
+bearish_div_rsi = input(60, "Min Bearish RSI", input.integer, minval=50, maxval=100)
+bullish_div_rsi = input(30, "Max Bullish RSI", input.integer, minval=0, maxval=50)
+
+// RSI+MFI Period
+rsiMFIperiod = input(72, "RSI+MFI Period")
+
+//RSI+MFI Area multiplier
+rsiMFIMultiplier = input(100, "RSI+MFI Area multiplier")
+
+// Colors
+colorRed = #ff0000
+colorPurple = #da00ff
+colorGreen = #03ff00
+colorOrange = color.orange
+
+
+// Divergence WT
+WTDivOBLevel = input(55)
+WTDivOSLevel = input(-60)
+
+// Divergence RSI
+RSIDivOBLevel = input(60)
+RSIDivOSLevel = input(40)
+
+// } PARAMETERS
+
+
+// CALCULATE INDICATORS {
+
+// RSI + MFI Area
+candleValue = (close - open) / (high - low)
+MVC = vwma(candleValue, rsiMFIperiod)
+color_area = MVC > 0 ? color.green : color.red
+
+// RSI
+up = rma(max(change(close), 0), 14)
+down = rma(-min(change(close), 0), 14)
+rsi = down == 0 ? 100 : up == 0 ? 0 : 100 - 100 / (1 + up / down)
+rsiColor = rsi < bullish_div_rsi ? color.green : rsi > bearish_div_rsi ? color.red : color.purple
+
+out = ema(rsi,14)
+plot(out, color=color.yellow)
+
+// Calculates WaveTrend
+//useHA=input(true,"Use heikin ashi candles?")
+//ha_AP=security(heikinashi(tickerid), period, AP)
+//ap = useHA?ha_AP:AP
+esa = ma(wtMA, ap, n1)
+de = ma(wtMA1, abs(ap - esa), n1)
+ci = (ap - esa) / (0.015 * de)
+tci = ma(wtMA2, ci, n2)
+wt1 = tci
+wt2 = ma(wtMA3, wt1, sp)
+wt3 = ma(wtMA4, wt1, sp1)
+wt4 = ma(wtMA5, wt1, sp2)
+
+// VWAP
+vwap_area = wt1 - wt2
+
+// WaveTrend Conditions
+WTCross = cross(wt1, wt2)
+WTCrossUp = wt2 - wt1 <= 0
+WTCrossDown = wt2 - wt1 >= 0
+WTOverSold = wt2 <= osLevel
+WTOverBought = wt2 >= obLevel
+WTGoldBuy = wt2 <= osLevel3
+
+// Godmode
+extended = wt2<-75 ? wt2-5 : na//? wt2+5 : wt2>75 ? wt2-5 : na
+extended2 = wt2<20// ? wt2+5 : wt2>80 ? wt2-5 : na
+extended3 = wt2>85 ? wt2+5 : na// ? wt2+5 : wt2>85 ? wt2-5 : na
+
+bgcolor(color=extended ? #008C8C : na, transp=90)
+//bgcolor(color=extended2 ? yellow : na, transp=90)
+bgcolor(color=extended3 ? #B20000 : na, transp=80)
+
+//DIVERGENCE
+f_top_fractal(_src) => _src[4] < _src[2] and _src[3] < _src[2] and _src[2] > _src[1] and _src[2] > _src[0]
+f_bot_fractal(_src) => _src[4] > _src[2] and _src[3] > _src[2] and _src[2] < _src[1] and _src[2] < _src[0]
+f_fractalize(_src) => f_top_fractal(_src) ? 1 : f_bot_fractal(_src) ? -1 : 0
+
+//DIVERGENCE WAVETREND
+WTFractal_top = f_fractalize(wt2) > 0 and wt2[2] >= WTDivOBLevel ? wt2[2] : na
+WTFractal_bot = f_fractalize(wt2) < 0 and wt2[2] <= WTDivOSLevel ? wt2[2] : na
+
+WTHigh_prev  = valuewhen(WTFractal_top, wt2[2], 0)[2]
+WTHigh_price = valuewhen(WTFractal_top, high[2], 0)[2]
+WTLow_prev  = valuewhen(WTFractal_bot, wt2[2], 0)[2]
+WTLow_price  = valuewhen(WTFractal_bot, low[2], 0)[2]
+
+WTRegular_bearish_div = WTFractal_top and high[2] > WTHigh_price and wt2[2] < WTHigh_prev
+WTRegular_bullish_div = WTFractal_bot and low[2] < WTLow_price and wt2[2] > WTLow_prev
+
+bearWTSignal = WTRegular_bearish_div and WTCrossDown
+bullWTSignal = WTRegular_bullish_div and WTCrossUp
+
+WTCol1 = bearWTSignal ? color.red : na
+WTCol2 = bullWTSignal ? #00FF00EB : na
+
+//DIVERGENCE RSI
+RSIFractal_top = f_fractalize(rsi) > 0 and rsi[2] >= RSIDivOBLevel ? rsi[2] : na
+RSIFractal_bot = f_fractalize(rsi) < 0 and rsi[2] <= RSIDivOSLevel ? rsi[2] : na
+
+RSIHigh_prev  = valuewhen(RSIFractal_top, rsi[2], 0)[2]
+RSIHigh_price = valuewhen(RSIFractal_top, high[2], 0)[2]
+RSILow_prev  = valuewhen(RSIFractal_bot, rsi[2], 0)[2]
+RSILow_price  = valuewhen(RSIFractal_bot, low[2], 0)[2]
+
+bearRSISignal = RSIFractal_top and high[2] > RSIHigh_price and rsi[2] < RSIHigh_prev
+bullRSISignal = RSIFractal_bot and low[2] < RSILow_price and rsi[2] > RSILow_prev
+
+RSICol1 = bearRSISignal ? #ff0000: na
+RSICol2 = bullRSISignal ? #00FF00EB : na
+
+// Small Circles WT Cross
+signalColor = wt2 - wt1 > 0 ? color.red : color.lime
+
+// Buy signal
+buySignal = WTCross and WTCrossUp and WTOverSold
+bigBuySignal = cross(wt1[2], wt2[2]) and WTCrossUp and (bullRSISignal or bullWTSignal)
+plotBuy = bigBuySignal ? bigBuySignal : buySignal
+
+// Sell signal
+sellSignal = WTCross and WTCrossDown and WTOverBought
+bigSellSignal = cross(wt1[2], wt2[2]) and WTCrossDown and (bearRSISignal or bearWTSignal)
+plotSell = bigSellSignal ? bigSellSignal : sellSignal
+
+// Gold Buy
+plotWTGoldBuy = WTCross and WTCrossUp and WTGoldBuy
+
+// } CALCULATE INDICATORS
+
+
+
+// RSI
+
+
+
+// } DRAW
+
+// ALERTS {
+  
+// BUY
+alertcondition(plotBuy != 0, "Buy Signal (Big green circle)", "Green circle WaveTrend Oversold")
+alertcondition(bigBuySignal != 0, "Buy Signal (Big green circle + Div)", "Buy signal & WT Bullish Divergence & WT Overbought ")
+alertcondition(plotWTGoldBuy != 0, "GOLD Buy Signal (Big GOLDEN circle)", "Green & GOLD circle WaveTrend Overbought")
+
+// SELL
+alertcondition(plotSell != 0, "Sell Signal (Big red circle)", "Red Circle WaveTrend Overbought")
+alertcondition(bigSellSignal != 0, "Sell Signal (Big red circle + Div)", "Buy signal & WT Bearish Divergence & WT Overbought ")
+
+
+// } ALERTS
+
+c1 = plotBuy or bigBuySignal or plotWTGoldBuy or buySignal
+c2 = plotSell or sellSignal
+// } ALERTS
+
+
+startDay = input(defval = 1, title = "Start Day")
+startMonth = input(defval = 1, title = "Start Month")
+startYear = input(defval=2018, title="Start Year")
+endDay = input(defval = 31, title = "End Day")
+endMonth = input(defval = 12, title = "End Month")
+endYear = input(defval = 2019, title = "End Year")
+start     = timestamp(startYear, startMonth, startDay, 00, 00)  // backtest start window
+finish    = timestamp(endYear, endMonth, endDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // 
+
+
+if window()
+    strategy.entry("buy", strategy.long, when=c1)
+    strategy.entry("sell", strategy.short, when=c2)
+

@@ -56,3 +56,8 @@ func avgGainLoss(f []float64) ([]float64, []float64) {
 	}
 	return gain, loss
 }
+
+// Just WrappedRSI, needed for some functional programmin
+func WrappedRsi(src Series, l int) Series {
+	return Rsi(src, l)
+}

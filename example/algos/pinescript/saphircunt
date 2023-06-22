@@ -1,0 +1,81 @@
+//@version=3
+strategy("td test strategy", shorttitle="td test", overlay = true, initial_capital = 10000,default_qty_type  = strategy.percent_of_equity, default_qty_value = 100, pyramiding = 0)
+
+
+jahr   = input(defval = 2018, title = "Start Year of testing")
+endJahr = input(defval = 2020, title = "Last Year of testing")
+kaka = input(title = "long?", defval = true)
+rr = input(title = "Risk Reward", defval = 1.0, step = 0.1)
+lb = input(title = "looking back bars for lowest/highest point", defval = 3)
+//TD
+negateTD = input(title = "watch green", defval = true)
+BuyL = input(title = "number To take order", defval = 8, minval = 1)
+
+TD = 0
+TD := close > close[4] ?nz(TD[1])+1:0
+TS = 0
+TS := low+close < low[4]+close[4] ?nz(TS[1])+1:0
+TDUpK = TD - valuewhen(TD < TD[1], TD , 1 )
+TDDnK = TS - valuewhen(TS < TS[1], TS , 1 )
+TDUp = negateTD ? TDDnK : TDUpK
+TDDn = negateTD ? TDUpK : TDDnK
+//
+numConB = BuyL == TDUp 
+
+
+numConS = BuyL == TDDn
+c1 = numConS
+c2 = c1
+
+//ma
+enableEMA = input(title = "enable EMA", defval = false)
+aboveEMA = input(title = "above EMA", defval = true)
+EMA = input(1)
+resEMA = input(title = "Resolution EMA", type = resolution, defval = "1W")
+outEMA = security(tickerid, resEMA, ema(close,EMA))
+conEMA = enableEMA ? aboveEMA ? outEMA <= close : outEMA > close : true
+//SMA
+enableSMA = input(title = "enable SMA", defval = false)
+aboveSMA = input(title = "above SMA", defval = true)
+SMA = input(2)
+resSMA = input(title = "Resolution SMA", type = resolution, defval = "1D")
+outSMA = security(tickerid, resSMA, sma(close,SMA))
+conSMA = enableSMA ? aboveSMA ? outSMA <= close : outSMA > close : true
+//FISHER
+lenF = input(9, minval=1, title="Length Fisher")
+
+high_ =10000* highest(hl2, lenF)
+low_ =10000* lowest(hl2, lenF)
+
+round_(val) => val > .99 ? .999 : val < -.99 ? -.999 : val
+
+value = 0.0
+value := (.66 * ((10000*hl2 - low_) / max(high_ - low_, .001) - .5) + .67 * nz(value[1]))
+
+fish1 = 0.0
+fish1 := .5 * log((1 + value) / max(1 - value, .001)) + .5 * nz(fish1[1])
+fish2 = fish1[1]
+
+includeFish = input(title="include Fisher", defval = false)
+fishTrue = input(title="Fisher positive?", defval = true)
+fishCon1 = fishTrue ? fish1 > fish2 : fish1 <= fish2
+fishL = input(defval = -6.1, title = "Fisher above")
+fishH = input(defval = 6.1, title = "fisher below")
+
+fishConB = fish1 > fishL and fish1 < fishH and fishCon1
+fishCon = includeFish ? fishConB : true
+
+if year >= jahr and year <= endJahr
+    if kaka
+	    strategy.entry("buy", strategy.long, when = c1 and conEMA and conSMA and fishCon)
+	    strategy.exit("bracket1", "buy", stop = lowest(lb), limit = rr*(close-lowest(lb))+close, when = c1 and conEMA and fishCon and conSMA)
+	else
+	    strategy.entry("sell", strategy.short, when =  c2 and conEMA and conSMA and fishCon)
+		strategy.exit("bracket2", "sell", stop = highest(lb), limit = close - rr*(highest(lb)-close), when = c2 and conEMA and conSMA and fishCon)
+	
+	
+	
+	
+	
+	
+	

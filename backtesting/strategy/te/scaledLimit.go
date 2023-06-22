@@ -3,6 +3,7 @@ package te
 import (
 	"errors"
 	"fmt"
+
 	"github.com/five-aces-research/toolkit/backtesting/strategy"
 	"github.com/five-aces-research/toolkit/backtesting/strategy/distribution"
 	"github.com/five-aces-research/toolkit/backtesting/ta"
@@ -10,14 +11,15 @@ import (
 )
 
 type ScaledLimit struct {
-	Min          float64
-	Max          float64
-	OrderCount   int
-	size         float64
-	distribution distribution.Func
-	stopLong     ta.Series // A stop is just a number.
-	stopShort    ta.Series // A stop is just a number
-	stopSize     float64
+	Min              float64
+	Max              float64
+	OrderCount       int
+	size             float64
+	distribution     distribution.Func
+	distributionName string
+	stopLong         ta.Series // A stop is just a number.
+	stopShort        ta.Series // A stop is just a number
+	stopSize         float64
 }
 
 func NewScaledLimit(min float64, max float64, OrderCount int) *ScaledLimit {
@@ -110,7 +112,7 @@ func (s *ScaledLimit) CreateTrade(Side bool, ch []fas.Candle, exitCandle int, in
 func (s *ScaledLimit) GetInfo() strategy.TEInfo {
 	return strategy.TEInfo{
 		Name:             "Limit Orders",
-		Info:             fmt.Sprintf("Min: %f, Max: %f, Orders: %d", s.Min, s.Max, s.OrderCount),
+		Info:             fmt.Sprintf("Min: %f, Max: %f, Orders: %d, Size: %f", s.Min, s.Max, s.OrderCount, s.size),
 		CandlePnlSupport: true,
 	}
 }
@@ -118,6 +120,7 @@ func (s *ScaledLimit) GetInfo() strategy.TEInfo {
 // Setter Functions
 func (s *ScaledLimit) Size(size float64) *ScaledLimit {
 	s.size = size
+
 	return s
 }
 

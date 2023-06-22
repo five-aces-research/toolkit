@@ -1,9 +1,10 @@
 package lta
 
 import (
-	"github.com/five-aces-research/toolkit/fas"
 	"log"
 	"time"
+
+	"github.com/five-aces-research/toolkit/fas"
 )
 
 type Chart interface {
@@ -31,7 +32,7 @@ func (o *KLINE) Add(u Updater) {
 }
 
 func Kline(data fas.Streamer, ticker string, resolution int64, limit int64, parameters ...any) *KLINE {
-	//Implementiert auch Updater, must be high
+	//Implements Updater
 	o := new(KLINE)
 	o.name = ticker
 	end := time.Now()

@@ -2,6 +2,7 @@ package strategy
 
 import (
 	"fmt"
+
 	"github.com/five-aces-research/toolkit/backtesting/ta"
 )
 
@@ -51,11 +52,6 @@ func (mt *MultiTicker) AddTickers(ch ...ta.Chart) {
 
 		b, s := mt.Algo(v)
 		bt.AddStrategy(b, s, fmt.Sprintf("%s %s", v.Name(), mt.AlgoName))
-		fmt.Println(len(bt.Results[0].Trade()))
 		mt.Results = append(mt.Results, bt.Results[0])
 	}
-}
-
-func Append[T any](src []T, new T) {
-	src = append(src, new)
 }

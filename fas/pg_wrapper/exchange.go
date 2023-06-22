@@ -3,14 +3,13 @@ package pg_wrapper
 import (
 	"context"
 	"fmt"
-	"github.com/five-aces-research/toolkit/fas"
-	"github.com/five-aces-research/toolkit/fas/bybit"
+	"log"
+	"strings"
+
 	"github.com/five-aces-research/toolkit/fas/pg_wrapper/qq"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // this is needed to use file:// URLs
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"log"
-	"strings"
 )
 
 type Pgx struct {
@@ -51,14 +50,5 @@ func getExchangeId(name string) int32 {
 	default:
 		log.Panicln("not implemented")
 		return 0
-	}
-}
-
-func loadExchanger(id int32) fas.Public {
-	switch id {
-	case 1:
-		return bybit.NewPublic()
-	default:
-		return nil
 	}
 }
