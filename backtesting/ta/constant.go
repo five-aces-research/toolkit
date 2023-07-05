@@ -40,3 +40,9 @@ func constantB(src Condition, a bool) Condition {
 	}
 	return s
 }
+
+type MaFunc func(s Series, i int) Series
+
+func (m MaFunc) Name() string {
+	return m(Constant([]float64{1, 2, 3, 4}, 0, 3600, ""), 2).Name()
+}

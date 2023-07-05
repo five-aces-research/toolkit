@@ -14,11 +14,7 @@ import (
 /*
 Plot has Multiple Usecase. Its main usecase is to provide data visualisation for Trading Results
 But it also supports Charting OHCLV Data, together with On Chart Indicator Like SMA or Bolling Bands
-
-
 PseudoCode
-
-
 plot.NewChart(ch)
 
 */

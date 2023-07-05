@@ -16,13 +16,14 @@ builder helps analyse strategies
 */
 
 type Config struct {
-	Exchange string
-	St       time.Time // Starttime
-	Et       time.Time // Endtime
-	Res      int32     // Resolution in Minutes
+	Exchange  string
+	St        time.Time // Starttime
+	Et        time.Time // Endtime
+	Res       int32     // Resolution in Minutes
+	Indicator []strategy.Indicator
 }
 
-func OneStratMultiTicker(db *pg_wrapper.Pgx, filename string, ticker []string, cfg Config, algo strategy.AlgoFunc, TE strategy.TradeExecution, paras strategy.Parameter) error {
+func OneStratMultiTicker(db *pg_wrapper.Pgx, filename string, ticker []string, cfg Config, algo strategy.AlgoFunc, TE strategy.TradeExecution, paras strategy.Parameter, filter ...strategy.Filter) error {
 
 	mt := strategy.NewMultiTicker("", algo, TE, paras)
 	charts := make([]ta.Chart, 0, len(ticker))
@@ -32,6 +33,9 @@ func OneStratMultiTicker(db *pg_wrapper.Pgx, filename string, ticker []string, c
 			return err
 		}
 		charts = append(charts, ta.NewChart(v, ch))
+	}
+	if cfg.Indicator != nil {
+		mt.AddIndicators(cfg.Indicator...)
 	}
 
 	mt.AddTickers(charts...)
@@ -67,12 +71,13 @@ type Strat struct {
 
 func OneTickerMultipleStrat(db *pg_wrapper.Pgx, filename string, ticker string, cfg Config, TE strategy.TradeExecution, paras strategy.Parameter, algos ...Strat) error {
 	var bt []*strategy.BackTestStrategy
+	var ch *ta.Kline
 	for _, v := range algos {
 		data, err := db.Klines("BYBIT", ticker, cfg.St, cfg.Et, v.Res)
 		if err != nil {
 			return err
 		}
-		ch := ta.NewChart(ticker, data)
+		ch = ta.NewChart(ticker, data)
 		btest := strategy.NewBacktest(ch, TE, paras)
 		b, s := v.Algo(ch)
 		btest.AddStrategy(b, s, v.Name)
@@ -80,4 +85,26 @@ func OneTickerMultipleStrat(db *pg_wrapper.Pgx, filename string, ticker string, 
 	}
 
 	return plot.SimplePnl(filename, nil, paras.Balance, bt)
+}
+
+type Filter struct {
+	Name   string
+	Filter strategy.Filter
+}
+
+func OneStrategyMultipleFilters(ch ta.Chart, filename string, cfg Config, algo strategy.AlgoFunc, TE strategy.TradeExecution, paras strategy.Parameter, indis []ta.Series, filter ...Filter) error {
+	var filtered []*strategy.BackTestStrategy
+
+	bt := strategy.NewBacktest(ch, TE, paras)
+	bt.SetIndicators(indis)
+
+	b, s := algo(ch)
+	bt.AddStrategy(b, s, "")
+
+	for _, v := range filter {
+		temp := bt.Filter(v.Name, v.Filter)
+		filtered = append(filtered, temp...)
+	}
+
+	return plot.DrawPnlDistributionColumn(filename, bt.Results[0].Trade(), filtered)
 }

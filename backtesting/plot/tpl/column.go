@@ -3,6 +3,7 @@ package tpl
 type Stats struct {
 	Name    string
 	Number  int
+	Total   float64
 	Mean    float64
 	Stdev   float64
 	Highest float64
@@ -27,6 +28,7 @@ const DEFAULTHEIGHT = "600px"
 const DEFAULTWIDTH = "100%"
 
 var DEFAULTCATEGORIES = []string{
+	"-8 <",
 	"-8 - -6",
 	"-6 - -4",
 	"-4 - -2",
@@ -90,21 +92,25 @@ Highcharts.chart('column{{.Id}}', {
     <tr>
       <th>Algo</th>
       <th>Number of Trades</th>
-      <th>Mean</th>
+            <th>Total</th>
+<th>Mean</th>
       <th>Stdev</th>
-      <th>Max Loss</th>
       <th>Max Win</th>
+      <th>Max Loss</th>
     </tr>
   </thead>
   <tbody>
+	{{range .Stats}}
     <tr>
       <td>{{.Name}}</td>
       <td>{{.Number}}</td>
-      <td>{{.Mean}}</td>
-      <td>{{.Stdev}}</td>
-      <td>{{.Highest}}</td>
-      <td>{{.Lowest}}</td>
+      <td>{{printf "%.2f" .Total}}</td>
+      <td>{{printf "%.2f" .Mean}}</td>
+      <td>{{printf "%.2f" .Stdev}}</td>
+      <td>{{printf "%.2f" .Highest}}</td>
+      <td>{{printf "%.2f" .Lowest}}</td>
     </tr>
+{{end}}
   </tbody>
 </table>
 

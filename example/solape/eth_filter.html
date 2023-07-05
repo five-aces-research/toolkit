@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Candlestick Chart</title>
+    <!-- Include Highcharts library -->
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- Include Highstock module for candlestick charts -->
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/data.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    </head>
+<body>
+<div id="column43a22c01-5f37-4dc7-9cc5-896730329d80" style="height: 600px; width: 100%;"></div>
+<script>
+Highcharts.chart('column43a22c01-5f37-4dc7-9cc5-896730329d80', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Trades Performance'
+    },
+    xAxis: {
+        categories: [
+			'-8 <',
+			'-8 - -6',
+			'-6 - -4',
+			'-4 - -2',
+			'-2 - -0.5',
+			'-0.5 - 0.5',
+			'0.5 - 2',
+			'2 - 4',
+			'4 - 6',
+			'6 - 8',
+			'<8',
+			
+        ],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Number of Trades'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.0f} </b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [
+        
+        {
+        name: '	RSI < 30 true',
+        data: [1,1,2,1,4,2,6,3,4,2,4,]
+
+    },
+        {
+        name: '	MACD < -2 true',
+        data: [2,5,6,7,9,12,11,8,5,3,8,]
+
+    },
+        {
+        name: '	MACD > 2 true',
+        data: [1,0,2,10,17,13,20,14,7,5,4,]
+
+    },]
+});
+
+</script>
+<table class="table table-dark w-100">
+  <thead>
+    <tr>
+      <th>Algo</th>
+      <th>Number of Trades</th>
+            <th>Total</th>
+<th>Mean</th>
+      <th>Stdev</th>
+      <th>Max Win</th>
+      <th>Max Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+	
+    <tr>
+      <td>main</td>
+      <td>427</td>
+      <td>279.26</td>
+      <td>0.65</td>
+      <td>4.58</td>
+      <td>34.43</td>
+      <td>-14.21</td>
+    </tr>
+
+    <tr>
+      <td>	RSI < 30 true</td>
+      <td>30</td>
+      <td>92.16</td>
+      <td>3.07</td>
+      <td>8.59</td>
+      <td>34.43</td>
+      <td>-13.56</td>
+    </tr>
+
+    <tr>
+      <td>	MACD < -2 true</td>
+      <td>76</td>
+      <td>102.35</td>
+      <td>1.35</td>
+      <td>7.24</td>
+      <td>34.43</td>
+      <td>-13.56</td>
+    </tr>
+
+    <tr>
+      <td>	MACD > 2 true</td>
+      <td>93</td>
+      <td>114.24</td>
+      <td>1.23</td>
+      <td>3.89</td>
+      <td>21.22</td>
+      <td>-8.49</td>
+    </tr>
+
+  </tbody>
+</table>
+
+
+</body>
+</html>

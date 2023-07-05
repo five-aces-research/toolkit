@@ -34,10 +34,11 @@ var PnlHTML = `
             }
         },
         yAxis: {
+		//	 type: 'logarithmic',
+        //minorTickInterval: 100,
             title: {
                 text: 'Account Balance'
             },
-            min: 0
         },
         tooltip: {
             headerFormat: '<b>{series.name}</b><br>',

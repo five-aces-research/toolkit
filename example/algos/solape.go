@@ -2,7 +2,7 @@ package algos
 
 import "github.com/five-aces-research/toolkit/backtesting/ta"
 
-func SolapeGenerator(l1 int, l2 int, ma func(src ta.Series, l int) ta.Series, useVol bool, longPer float64, shortPer float64, lookback int) func(ta.Chart) (buy, sell ta.Condition) {
+func SolapeGenerator(src func(ta.Chart) ta.Series, l1 int, l2 int, ma func(src ta.Series, l int) ta.Series, useVol bool, longPer float64, shortPer float64, lookback int) func(ta.Chart) (buy, sell ta.Condition) {
 
 	return func(ch ta.Chart) (buy, sell ta.Condition) {
 		oc2 := ta.OC2(ch)
@@ -48,4 +48,17 @@ func shortCon(prozent float64, len int, close, high ta.Series) ta.Condition {
 	highest := ta.Highest(high, len)
 	r1 := ta.Sub(ta.Div(close, highest), 1)
 	return ta.Smaller(r1, -prozent/100)
+}
+
+func Solape(src ta.Series, ma ta.MaFunc, l1, l2 int) (buy, sell ta.Condition) {
+	outR := ta.Sma(ta.Roc(src, l1), 2)
+	outB1 := ma(outR, l2)
+	outB2 := ma(outB1, l2)
+	outB := ta.SubF(outB1, outB2, 2.0)
+	cc := ta.Sub(outR, outB)
+	c1 := ta.Sma(cc, 2)
+	c2, c3 := ta.OffS(c1, 1), ta.OffS(c1, 2)
+	buy = ta.And(ta.Greater(c1, c2), ta.Smaller(c2, c3))
+	sell = ta.And(ta.Smaller(c1, c2), ta.Greater(c2, c3))
+	return
 }

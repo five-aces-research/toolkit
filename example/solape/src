@@ -1,0 +1,57 @@
+var tickers = []string{"l.BTCUSDT", "l.ETHUSDT", "l.SOLUSDT", "l.ADAUSDT", "l.ETCUSDT", "l.LTCUSDT", "l.XRPUSDT", "l.MATICUSDT", "l.FLMUSDT", "l.ARBUSDT", "l.STXUSDT", "l.DOGEUSDT", "l.INJUSDT", "l.FTMUSDT"}
+
+func main() {
+	db, err := pg_wrapper.Connect("127.0.0.1", "toolkit", "postgres", "password", 5432)
+	if err != nil {
+		os.Exit(1)
+	}
+	alg1 := algos.SolapeGenerator(ta.Open, 10, 12, ta.Sma, false, 0, 0, 4)
+	alg2 := algos.SolapeGenerator(ta.OC2, 16, 6, ta.Sma, false, 0, 0, 4)
+	alg3 := algos.SolapeGenerator(ta.OC2, 4, 6, ta.Sma, false, 0, 0, 4)
+	d1 := algos.SolapeGenerator(ta.High, 20, 10, ta.Sma, false, 0, 0, 4)
+	d2 := algos.SolapeGenerator(ta.High, 20, 4, ta.Rma, false, 0, 0, 4)
+
+	//ss := algos.KetlerChannelDivergenceSell(20, 2.0, ta.Sma, 8, 13)
+	cfg := builder.Config{
+		St:       Year(2020),
+		Et:       time.Date(2023, 6, 20, 0, 0, 0, 0, time.UTC),
+		Res:      1440,
+		Exchange: "BYBIT",
+	}
+
+	bs := []builder.Strat{{
+		Name: "4h, Open, 10, 12, SMA",
+		Algo: alg1,
+		Res:  240,
+	}, {
+		Name: "4h, OC2, 16, 6, SMA",
+		Algo: alg2,
+		Res:  240,
+	}, {Name: "4h, OC2, 4, 6, SMA",
+		Algo: alg3,
+		Res:  240,
+	}, {Name: "D, High, 20, 10, SMA",
+		Algo: d1,
+		Res:  1440,
+	}, {
+		Name: "D, High, 20, 4, SMA",
+		Algo: d2,
+		Res:  1440,
+	},
+	}
+	fmt.Println(len(bs))
+
+	//err = builder.OneTickerMultipleStrat(db, "solape_bnb_strats.html", "l.BNBUSDT", cfg, market, parasBybit, bs...)
+	err = builder.OneStratMultiTicker(db, "solape/d2_tickers.html", tickers, cfg, d2, market, parasBybit)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
+}
+
+func Year(year int) time.Time {
+	return time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+}

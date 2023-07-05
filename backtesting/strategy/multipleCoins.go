@@ -55,3 +55,25 @@ func (mt *MultiTicker) AddTickers(ch ...ta.Chart) {
 		mt.Results = append(mt.Results, bt.Results[0])
 	}
 }
+
+func (mt *MultiTicker) Filter(ConditionName string, op Filter) []*BackTestStrategy {
+	var bb []*BackTestStrategy
+
+	for _, vv := range mt.Results {
+		var tt []*Trade
+		for _, v := range vv.tr {
+			if op(v.Indicator) {
+				tt = append(tt, v)
+			}
+		}
+		if len(tt) > 0 {
+			bb = append(bb, &BackTestStrategy{
+				Name:       vv.Name + "\t" + ConditionName + " true",
+				tr:         tt,
+				Parameters: vv.Parameters,
+				sortAlgo:   vv.sortAlgo,
+			})
+		}
+	}
+	return bb
+}

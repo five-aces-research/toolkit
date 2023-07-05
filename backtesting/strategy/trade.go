@@ -155,13 +155,14 @@ func (t *Trade) Start() time.Time {
 
 func (t *Trade) PnlPercent() float64 {
 	if t.pnl == nil {
+		t.pnl = new(float64)
 		if t.Side {
 			*t.pnl = (t.AvgSell - t.AvgBuy) / t.AvgBuy
 		} else {
 			*t.pnl = -1 * (t.AvgBuy - t.AvgSell) / t.AvgBuy
 		}
 	}
-	return *t.pnl
+	return *t.pnl * 100
 }
 
 func (t *Trade) RealisedPNL() float64 {

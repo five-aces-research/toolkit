@@ -113,6 +113,10 @@ func (bt *BackTest) AddStrategy(buy, sell ta.Condition, Name string) {
 	b.tr = tr
 	b.Name = Name
 	b.Ticker = bt.ch.Name()
+	if len(tr) == 0 {
+		return
+	}
+
 	bt.Results = append(bt.Results, b)
 }
 
@@ -167,12 +171,14 @@ func (bt *BackTest) Filter(ConditionName string, op Filter) []*BackTestStrategy 
 				tt = append(tt, v)
 			}
 		}
-		bb = append(bb, &BackTestStrategy{
-			Name:       vv.Name + "\t" + ConditionName + " true",
-			tr:         tt,
-			Parameters: vv.Parameters,
-			sortAlgo:   vv.sortAlgo,
-		})
+		if len(tt) > 0 {
+			bb = append(bb, &BackTestStrategy{
+				Name:       vv.Name + "\t" + ConditionName + " true",
+				tr:         tt,
+				Parameters: vv.Parameters,
+				sortAlgo:   vv.sortAlgo,
+			})
+		}
 	}
 	return bb
 }

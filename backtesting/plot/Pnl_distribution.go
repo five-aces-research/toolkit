@@ -2,6 +2,7 @@ package plot
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"os"
@@ -15,6 +16,7 @@ import (
 func DrawPnlDistributionColumn(Filename string, MainStrat []*strategy.Trade, backtests []*strategy.BackTestStrategy) error {
 	data := pnlDistribution(MainStrat, backtests)
 
+	fmt.Println(len(data.Stats))
 	ff, err := os.Create(Filename)
 	if err != nil {
 		return err
@@ -87,7 +89,7 @@ func Stdev(name string, tr []*strategy.Trade) tpl.Stats {
 	variance := calculateVariance(stdev, mean)
 	stdDeviate := math.Sqrt(variance)
 
-	return tpl.Stats{Name: name, Number: len(stdev), Mean: mean, Stdev: stdDeviate, Highest: max, Lowest: min}
+	return tpl.Stats{Name: name, Number: len(stdev), Total: sum, Mean: mean, Stdev: stdDeviate, Highest: max, Lowest: min}
 }
 
 func CreateStatsAndDistribution(name string, tr []*strategy.Trade) (tpl.Stats, tpl.Distribution, error) {
@@ -107,7 +109,8 @@ func CreateStatsAndDistribution(name string, tr []*strategy.Trade) (tpl.Stats, t
 		stdev = append(stdev, value)
 		if value > max {
 			max = value
-		} else if value < min {
+		}
+		if value < min {
 			min = value
 		}
 		switch {
@@ -136,11 +139,12 @@ func CreateStatsAndDistribution(name string, tr []*strategy.Trade) (tpl.Stats, t
 		default:
 		}
 	}
+
 	mean := sum / float64(len(stdev))
 	variance := calculateVariance(stdev, mean)
 	stdDeviate := math.Sqrt(variance)
 
-	return tpl.Stats{Name: name, Number: len(stdev), Mean: mean, Stdev: stdDeviate, Highest: max, Lowest: min}, tpl.Distribution{Name: name, Values: distribution}, nil
+	return tpl.Stats{Name: name, Number: len(stdev), Mean: mean, Total: sum, Stdev: stdDeviate, Highest: max, Lowest: min}, tpl.Distribution{Name: name, Values: distribution}, nil
 }
 
 func calculateVariance(data []float64, mean float64) float64 {
